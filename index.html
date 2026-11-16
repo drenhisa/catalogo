@@ -65,7 +65,8 @@ details details{background:#fafbfd}
 .acts{display:flex;gap:6px;flex-wrap:wrap}
 
 #stage{overflow:auto;padding:18px;display:flex;flex-direction:column;align-items:center;position:relative}
-#sizer{position:relative;flex:none}
+.sizer{position:relative;flex:none;margin-bottom:18px}
+.warn.info{background:#e8f1ff;border-color:#b6d0f5;color:#16407a}
 .warn{position:sticky;top:0;z-index:5;background:#fff3cd;border:1px solid #f0cf65;color:#6b5200;border-radius:8px;padding:6px 12px;margin-bottom:10px;font-weight:500}
 #stagehint{color:var(--ui-mute);font-size:12px;margin-bottom:8px}
 
@@ -112,16 +113,31 @@ details details{background:#fafbfd}
 .edit .page .el .rh{display:block;position:absolute;right:-6px;bottom:-6px;width:13px;height:13px;border-radius:3px;background:var(--ui-accent);cursor:nwse-resize}
 .edit .page [data-upload]{cursor:pointer}
 .edit .page .ph{border:1.5px dashed #b9c0cf;border-radius:8px;color:#8b93a6;font-size:11px;display:grid;place-items:center;text-align:center;background:#fafbfd}
-.page .gp{position:absolute;left:44px;right:44px;top:42px;bottom:36px;display:flex;flex-direction:column}
-.page .gp .body{flex:1;display:grid;margin-top:12px}
-.page .it{display:flex;align-items:center;gap:14px;padding:6px 0}
-.page .it.r{flex-direction:row-reverse}
+.page .gh{position:absolute;left:44px;right:44px;top:42px}
+.page .bar{display:none;width:58px;height:5px;border-radius:3px;background:var(--yellow);margin-top:9px}
+.page.s-lines .bar,.page.s-cards .bar{display:block}
+.page.s-clean .sec .bar{display:none}
+.page .it{position:absolute;display:flex;align-items:center;gap:14px}
 .page .it .im{flex:none;display:grid;place-items:center}
-.page .it .im img{max-width:100%;max-height:100%;object-fit:contain}
+.page .it .im img{display:block;mix-blend-mode:multiply}
 .page .it .tx{flex:1;min-width:0}
-.page .it .nm{font-family:Poppins,sans-serif;font-weight:600;color:var(--navy);text-align:center;line-height:1.2}
-.page .it .ns{font-family:Poppins,sans-serif;font-size:.8em;font-weight:500;font-style:italic;text-align:center;color:var(--navy);margin-top:1px}
-.page .it hr{border:0;border-top:1px solid #ddd;margin:6px 0 4px}
+.page .it .nm{font-family:Poppins,sans-serif;font-weight:600;color:var(--navy);text-align:center;line-height:1.22}
+.page .it .ns{font-family:Poppins,sans-serif;font-size:12px;font-weight:500;font-style:italic;text-align:center;color:var(--navy);margin-top:1px}
+.page .it .rule{border:0;border-top:1px solid #d9dde5;margin:7px 0 5px}
+.page .it ul.m li>*{padding:1px 0;line-height:1.22}
+.page .it .cols{gap:24px}
+.page .it.wide .cols{gap:30px}
+.page .sec{position:absolute}
+.page .sec h2{font-family:Poppins,sans-serif;font-style:italic;font-weight:700;font-size:23px;line-height:1.3;letter-spacing:-.5px;margin:0;color:#000}
+.page .sec .bar{width:100%;height:2px;border-radius:0;background:#dde2ea;margin-top:6px}
+.page.s-lines .it::after{content:"";position:absolute;left:0;right:0;bottom:calc(var(--gy) / -2);border-top:1px solid #dfe3ea}
+.page.s-lines .it.last::after{display:none}
+.page.s-cards .it{background:#f4f7fc;border:1px solid #dbe4f2;border-radius:14px;padding:12px 14px}
+.page.s-cards .it .im{background:#fff;border-radius:10px}
+.page.s-cards .it .nm{background:var(--blue);color:#fff;border-radius:8px;padding:5px 10px;margin-bottom:8px}
+.page.s-cards .it .ns{margin:-3px 0 6px}
+.page.s-cards .it .rule{display:none}
+.page .it .im.ph{border:1.5px dashed #b9c0cf;border-radius:8px;color:#8b93a6;font-size:11px;text-align:center;background:#fafbfd}
 
 /* ---------- Print ---------- */
 #print{display:none}
@@ -177,6 +193,9 @@ const FR = {'1/2':'½','1/4':'¼','3/4':'¾','1/8':'⅛','3/8':'⅜','5/8':'⅝'
 function fmtMeasure(t, unit, gap) {
   let s = t.trim();
   if (!s) return s;
+  const parts = s.split(/\s*[x×]\s*/i);
+  if (parts.length > 1 && parts.every(x => /^[\d\s\/.,½¼¾⅛⅜⅝⅞⅓⅔”"″']+$/.test(x)))
+    return parts.map(x => fmtMeasure(x, unit, gap)).join('\u2009x\u2009');
   s = s.replace(/(\d+)\s+(\d+\/\d+)/g, (m, w, f) => FR[f] ? w + (gap ? ' ' : '') + FR[f] : m)
        .replace(/(^|[^\d])(\d+\/\d+)/g, (m, pre, f) => FR[f] ? pre + FR[f] : m);
   s = s.replace(/["”″]|''/g, '');            // quita comillas escritas a mano
@@ -212,9 +231,10 @@ const newImage = src => ({ src, x: 40, y: 700, w: 400 });
 const newText = () => ({ text: 'TEXTO DESTACADO', x: 440, y: 800, w: 330, size: 32, align: 'center', color: 'navy', weight: 700 });
 const newGrid = () => ({
   id: uid(), type: 'grid', title: 'Título de la página', subtitle: '', accent: 'blue',
-  columns: 2, flow: 'col', imgW: 120, imgH: 120, nameSize: 17, measSize: 15, items: [newItem()]
+  style: 'clean', gapY: 0, snap: 60, imgW: 128, imgH: 150, items: [newItem()]
 });
-const newItem = () => ({ name: 'Nombre del artículo', sub: '', img: '', imgSide: 'l', items: '', unit: '”', gap: true, bullets: true, cols: 0, max: 8 });
+const newItem = () => ({ kind: 'item', name: 'Nombre del artículo', sub: '', img: '', ar: 1, span: 1, items: '', unit: '”', gap: true, bullets: true });
+const newSection = () => ({ kind: 'section', name: 'Título de la sección', sub: '' });
 
 const SAMPLE = () => ({ pages: [
   { id: uid(), type: 'product', accent: 'blue',
@@ -238,20 +258,14 @@ const SAMPLE = () => ({ pages: [
         items: '1/2 | 100mts\n3/4 | 100mts\n1 | 50mts y 100mts\n1 1/4 | 50mts y 100mts\n1 1/2 | 50mts y 100mts\n2 | 100mts\n3 | 50mts' }
     ], images: [], texts: [] },
   { id: uid(), type: 'grid', title: 'Válvulas Bridadas para Agua Potable', subtitle: 'Presión de trabajo: 250 PSI',
-    accent: 'blue', columns: 2, flow: 'col', imgW: 120, imgH: 120, nameSize: 17, measSize: 15,
+    accent: 'blue', style: 'clean', gapY: 0, snap: 60, imgW: 128, imgH: 150,
     items: [
-      { name: 'Válvula de Compuerta', sub: 'Vástago Fijo', img: '', imgSide: 'l', unit: '”', gap: true, bullets: true, cols: 0, max: 8,
-        items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
-      { name: 'Válvula de Compuerta', sub: 'Vástago Saliente', img: '', imgSide: 'l', unit: '”', gap: true, bullets: true, cols: 0, max: 8,
-        items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' },
-      { name: 'Medidor de Flujo', sub: '', img: '', imgSide: 'l', unit: '”', gap: true, bullets: true, cols: 0, max: 8,
-        items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' },
-      { name: 'Válvula Mariposa', sub: '', img: '', imgSide: 'l', unit: '”', gap: true, bullets: true, cols: 0, max: 8,
-        items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
-      { name: 'Válvula Check', sub: '', img: '', imgSide: 'l', unit: '”', gap: true, bullets: true, cols: 0, max: 8,
-        items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
-      { name: 'Filtro “Y”', sub: '', img: '', imgSide: 'l', unit: '”', gap: true, bullets: true, cols: 0, max: 8,
-        items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' }
+      { kind: 'item', name: 'Válvula de Compuerta', sub: 'Vástago Fijo', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
+      { kind: 'item', name: 'Válvula Mariposa', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
+      { kind: 'item', name: 'Válvula de Compuerta', sub: 'Vástago Saliente', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' },
+      { kind: 'item', name: 'Válvula Check', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
+      { kind: 'item', name: 'Medidor de Flujo', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' },
+      { kind: 'item', name: 'Filtro “Y”', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' }
     ] }
 ] });
 
@@ -352,27 +366,121 @@ function productHTML(p, edit) {
   return html;
 }
 
-function gridHTML(p, edit) {
-  const n = p.items.length, cols = Math.max(1, +p.columns || 1), rows = Math.ceil(n / cols);
-  const flow = p.flow === 'col' ? `grid-auto-flow:column;grid-template-rows:repeat(${rows},auto)` : '';
-  let html = `<div class="gp"><div class="hd"><div><h1>${rt(p.title, p.accent)}</h1>${p.subtitle ? `<div class="sub">${esc(p.subtitle)}</div>` : ''}</div></div>`;
-  html += `<div class="body flow" style="grid-template-columns:repeat(${cols},1fr);column-gap:30px;align-content:space-evenly;${flow}">`;
-  p.items.forEach((it, i) => {
-    const imgBox = it.img
-      ? `<img src="${it.img}" draggable="false">`
-      : (edit ? `<div class="ph" style="width:100%;height:100%">＋ foto<br>(clic o arrastra)</div>` : '');
-    html += `<div class="it ${it.imgSide === 'r' ? 'r' : ''}">
-      <div class="im" ${edit ? `data-upload="items.${i}.img"` : ''} style="width:${p.imgW}px;height:${p.imgH}px">${imgBox}</div>
-      <div class="tx" style="font-size:${p.measSize}px">
-        <div class="nm" style="font-size:${p.nameSize}px">${esc(it.name)}</div>
-        ${it.sub ? `<div class="ns">${esc(it.sub)}</div>` : ''}<hr>
-        ${measListHTML(it)}
-      </div></div>`;
-  });
-  return html + `</div></div>`;
+/* ---------- Motor de la página "Varios artículos" ----------
+   · Medidas siempre en 2 columnas (mitad y mitad). Si la lista es enorme, el artículo
+     puede ocupar el ancho completo y repartir en hasta 5 columnas.
+   · Los artículos se reparten izquierda/derecha. Si al empezar una fila las dos columnas
+     difieren por poco (tolerancia), se alinean; si difieren mucho, cada lado sigue su camino.
+   · Si el contenido no cabe, continúa solo en otra hoja.                                   */
+const LAY = { x: 44, W: 728, gap: 28, bottom: 1016 };
+let _meas;
+function measureEl(style) {
+  if (!_meas) {
+    _meas = document.createElement('div');
+    _meas.style.cssText = 'position:absolute;left:-12000px;top:0;visibility:hidden;width:816px;height:auto;overflow:visible;box-shadow:none';
+    document.body.appendChild(_meas);
+  }
+  _meas.className = 'page s-' + style;
+  return _meas;
+}
+function imgSize(it, p, iw) {
+  const ar = it.ar > 0 ? it.ar : 1, maxH = p.imgH || 150;
+  let w = iw, h = w / ar;
+  if (h > maxH) { h = maxH; w = h * ar; }
+  return { w: Math.round(w), h: Math.round(h) };
+}
+function measFont(list, rows, wide) {
+  const longest = list.reduce((m, x) => Math.max(m, x.l.length), 0);
+  let s = rows <= 8 ? 15.5 : rows <= 10 ? 14.5 : rows <= 13 ? 13 : rows <= 15 ? 12 : 11.5;
+  if (wide) return Math.min(s, 13.5);
+  if (longest >= 11) s = Math.min(s, 12); else if (longest >= 8) s = Math.min(s, 13.5);
+  return s;
+}
+const nameFont = (len, cards) => { const k = cards ? .9 : 1; return len <= 20 * k ? 17 : len <= 28 * k ? 15 : 13.5; };
+
+function headerHTML(p, style) {
+  return `<div class="gh"><h1>${rt(p.title, p.accent)}</h1>${p.subtitle ? `<div class="sub">${esc(p.subtitle)}</div>` : ''}<div class="bar"></div></div>`;
 }
 
-const pageHTML = (p, edit) => `<div class="page ${edit ? '' : ''}">${p.type === 'product' ? productHTML(p, edit) : gridHTML(p, edit)}</div>`;
+function itemHTML(it, p, o) {
+  const pos = `left:${o.x || 0}px;top:${o.y || 0}px;width:${o.w}px`;
+  if (it.kind === 'section')
+    return `<div class="sec" style="${pos}"><h2>${rt(it.name, p.accent)}</h2>${it.sub ? `<div class="sub">${esc(it.sub)}</div>` : ''}<div class="bar"></div></div>`;
+  const cards = p.style === 'cards';
+  const iw = (p.imgW || 128) - (cards ? 16 : 0);
+  const up = o.edit ? `data-upload="items.${o.i}.img"` : '';
+  let im;
+  if (it.img) { const z = imgSize(it, p, iw); im = `<div class="im" ${up} style="width:${iw}px;height:${z.h}px"><img src="${it.img}" style="width:${z.w}px;height:${z.h}px" draggable="false"></div>`; }
+  else if (o.edit) im = `<div class="im ph" ${up} style="width:${iw}px;height:${Math.min(100, p.imgH || 150)}px">＋ foto</div>`;
+  else im = `<div class="im" style="width:${iw}px"></div>`;
+
+  const list = parseMeasures(it.items, it.unit, it.gap);
+  const n = list.length, wide = !!o.wide;
+  const cols = wide ? Math.min(5, Math.max(2, Math.ceil(n / 10))) : 2;
+  const rows = Math.max(1, Math.ceil(n / cols));
+  const fs = measFont(list, rows, wide);
+  let lists = '';
+  for (let c = 0; c < cols; c++) {
+    const chunk = list.slice(c * rows, (c + 1) * rows); if (!chunk.length) continue;
+    const hasVal = chunk.some(x => x.v);
+    lists += `<ul class="m ${hasVal ? '' : 'noval'}">` + chunk.map(x => `<li><span class="lb ${it.bullets !== false ? 'bu' : ''}" style="${hasVal ? '' : 'font-weight:400'}">${esc(x.l)}</span>${hasVal ? `<span class="vv">${esc(x.v)}</span>` : ''}</li>`).join('') + '</ul>';
+  }
+  return `<div class="it ${wide ? 'wide' : ''} ${o.last ? 'last' : ''}" style="${pos}">${im}<div class="tx">
+    <div class="nm" style="font-size:${nameFont(it.name.length, cards)}px">${esc(it.name)}</div>${it.sub ? `<div class="ns">${esc(it.sub)}</div>` : ''}<hr class="rule">
+    <div class="cols" style="font-size:${fs}px">${lists}</div></div></div>`;
+}
+
+function layoutGrid(p) {
+  const st = p.style || 'clean';
+  const gy = p.gapY > 0 ? p.gapY : ({ clean: 34, lines: 40, cards: 20 }[st] || 42);
+  const laneW = (LAY.W - LAY.gap) / 2, tol = p.snap == null ? 60 : p.snap;
+  const m = measureEl(st);
+  m.innerHTML = `<div class="gh" style="left:0;right:auto;width:${LAY.W}px">${headerHTML(p).replace(/^<div class="gh">/, '').replace(/<\/div>$/, '')}</div>`;
+  const y0 = 42 + m.firstChild.offsetHeight + 28;
+  const items = p.items.map((it, i) => ({ it, i, sec: it.kind === 'section', wide: it.kind !== 'section' && +it.span === 2 }));
+  m.innerHTML = items.map(o => itemHTML(o.it, p, { i: o.i, wide: o.wide, w: (o.sec || o.wide) ? LAY.W : laneW })).join('');
+  items.forEach((o, k) => { o.h = m.children[k].offsetHeight; });
+
+  const sheets = []; let sh, yL, yR;
+  const newSheet = () => { sh = []; sheets.push(sh); yL = yR = y0; };
+  newSheet();
+  let k = 0;
+  while (k < items.length) {
+    const a = items[k];
+    if (a.sec || a.wide) {
+      let y = Math.max(yL, yR);
+      const need = a.h + (a.sec && items[k + 1] ? gy * .6 + items[k + 1].h : 0);
+      if (y + need > LAY.bottom && sh.length) { newSheet(); y = y0; }
+      sh.push({ ...a, x: LAY.x, w: LAY.W, y });
+      yL = yR = y + a.h + (a.sec ? gy * .6 : gy); k++; continue;
+    }
+    const b = (items[k + 1] && !items[k + 1].sec && !items[k + 1].wide) ? items[k + 1] : null;
+    let ya = yL, yb = yR;
+    if (Math.abs(yL - yR) <= tol) ya = yb = Math.max(yL, yR);          // diferencia pequeña → alinear
+    if ((ya + a.h > LAY.bottom || (b && yb + b.h > LAY.bottom)) && sh.length) { newSheet(); ya = yb = y0; }
+    sh.push({ ...a, x: LAY.x, w: laneW, y: ya });
+    if (b) sh.push({ ...b, x: LAY.x + laneW + LAY.gap, w: laneW, y: yb });
+    yL = ya + a.h + gy; if (b) yR = yb + b.h + gy;
+    k += b ? 2 : 1;
+  }
+  sheets.forEach(list => {                                   // sin separador en la última fila de cada lado
+    const fs = list.filter(o => o.sec || o.wide), wsY = fs.length ? Math.max(...fs.map(o => o.y)) : -1;
+    const mb = Math.max(...list.map(o => o.y + o.h));
+    [true, false].forEach(left => {
+      const xs = list.filter(o => !o.sec && !o.wide && (o.x < LAY.x + laneW) === left && o.y > wsY);
+      if (xs.length) xs.reduce((a, b) => b.y > a.y ? b : a).last = true;
+    });
+    fs.forEach(o => { if (o.y + o.h >= mb - 1) o.last = true; });
+  });
+  return { sheets, gy, st };
+}
+
+function gridSheets(p, edit) {
+  const { sheets, gy, st } = layoutGrid(p);
+  return sheets.map(list => `<div class="page s-${st}" style="--gy:${gy}px">${headerHTML(p)}${list.map(o => itemHTML(o.it, p, { i: o.i, wide: o.wide, w: o.w, x: o.x, y: o.y, edit, last: o.last })).join('')}</div>`);
+}
+
+const pageSheets = (p, edit) => p.type === 'product' ? [`<div class="page">${productHTML(p, edit)}</div>`] : gridSheets(p, edit);
 
 /* =========================================================
    Vista previa
@@ -382,18 +490,15 @@ function renderPreview() {
   const fit = Math.min((st.clientWidth - 36) / PW, (st.clientHeight - 70) / PH);
   scale = Math.max(.3, Math.min(fit, 1.4));
   st.classList.add('edit');
-  st.innerHTML = `<div id="stagehint">Arrastra fotos/textos en la página · esquina azul = cambiar tamaño</div><div id="sizer" style="width:${PW * scale}px;height:${PH * scale}px">${pageHTML(page(), true)}</div>`;
-  const pg = st.querySelector('.page');
-  pg.style.transform = `scale(${scale})`;
-  // aviso de desbordamiento
-  const flow = pg.querySelector('.flow');
-  if (flow) {
-    const bottom = flow.classList.contains('body') ? (pg.querySelector('.gp').scrollHeight) : flow.offsetTop + flow.offsetHeight;
-    const over = flow.classList.contains('body')
-      ? [...flow.children].some(c => c.getBoundingClientRect().bottom - pg.getBoundingClientRect().top > (PH - 20) * scale)
-      : bottom > PH - 20;
-    if (over) st.insertAdjacentHTML('afterbegin', '<div class="warn">⚠ El contenido se sale de la página: reduce medidas, tamaños o columnas.</div>');
-  }
+  const p = page(), sheets = pageSheets(p, true);
+  const hint = p.type === 'product' ? 'Arrastra fotos/textos en la página · esquina azul = cambiar tamaño' : 'Clic o arrastra una imagen sobre cada “＋ foto” · las hojas se agregan solas';
+  st.innerHTML = (sheets.length > 1 ? `<div class="warn info">Este conjunto ocupa ${sheets.length} hojas: se reparte solo.</div>` : '') +
+    `<div id="stagehint">${hint}</div>` +
+    sheets.map(h => `<div class="sizer" style="width:${PW * scale}px;height:${PH * scale}px">${h}</div>`).join('');
+  st.querySelectorAll('.page').forEach(pg => { pg.style.transform = `scale(${scale})`; });
+  const flow = st.querySelector('.page .flow');
+  if (flow && p.type === 'product' && flow.offsetTop + flow.offsetHeight > PH - 20)
+    st.insertAdjacentHTML('afterbegin', '<div class="warn">⚠ El contenido se sale de la página: reduce textos o tamaños.</div>');
 }
 
 function renderSide() {
@@ -404,7 +509,7 @@ function renderSide() {
     </div>` + project.pages.map((p, i) => `
     <div class="pg ${i === cur ? 'sel' : ''}" data-act="sel" data-i="${i}">
       <span class="n">${i + 1}</span>
-      <span class="t"><b>${esc((p.title || '').replace(/\[\[|\]\]/g, '') || 'Sin título')}</b><small>${p.type === 'product' ? 'Producto' : 'Varios artículos (' + p.items.length + ')'}</small></span>
+      <span class="t"><b>${esc((p.title || '').replace(/\[\[|\]\]/g, '') || 'Sin título')}</b><small>${p.type === 'product' ? 'Producto' : 'Varios artículos (' + p.items.filter(x => x.kind !== 'section').length + ')'}</small></span>
       <span class="ctl"><button data-act="pgUp" data-i="${i}" title="Subir">▲</button><button data-act="pgDown" data-i="${i}" title="Bajar">▼</button></span>
     </div>`).join('') + `
     <div class="acts" style="margin-top:10px">
@@ -504,19 +609,21 @@ function renderEditor() {
       ${F('Color de acento', 'accent', { opts: ACC })}
       <p class="hint">Usa [[corchetes]] para color.</p>`, true);
     h += det('lay', 'Diseño de la página', `
-      <div class="row2">${F('Columnas de artículos', 'columns', { opts: [[1, '1'], [2, '2'], [3, '3']], num: true })}
-      ${F('Orden', 'flow', { opts: [['col', 'Por columnas ↓'], ['row', 'Por filas →']] })}</div>
-      <div class="row2">${F('Ancho de foto (px)', 'imgW', { type: 'number', min: 40 })}${F('Alto de foto (px)', 'imgH', { type: 'number', min: 40 })}</div>
-      <div class="row2">${F('Letra del nombre', 'nameSize', { type: 'number', min: 9 })}${F('Letra de medidas', 'measSize', { type: 'number', min: 8 })}</div>
-      <p class="hint">Tip: si las medidas no caben, baja la letra o el alto de foto. La página avisa cuando algo se sale.</p>`, true);
-    h += det('its', `Artículos (${p.items.length})`, p.items.map((it, i) => det('i' + i, `${i + 1}. ${esc(it.name)}${it.sub ? ' · ' + esc(it.sub) : ''}`, `
+      ${F('Estilo', 'style', { opts: [['clean', 'Clásico (como el catálogo actual)'], ['lines', 'Con separadores'], ['cards', 'Tarjetas']] })}
+      <div class="row2">${F('Foto: ancho máx. (px)', 'imgW', { type: 'number', min: 60 })}${F('Foto: alto máx. (px)', 'imgH', { type: 'number', min: 60 })}</div>
+      <div class="row2">${F('Espacio entre filas (0 = auto)', 'gapY', { type: 'number', min: 0 })}${F('Alinear si difieren menos de (px)', 'snap', { type: 'number', min: 0 })}</div>
+      <p class="hint">Las medidas siempre van en 2 columnas. Si un lado queda un poco más corto que el otro, se alinean; si la diferencia es grande, cada lado sigue su propio ritmo. Cuando no cabe más, sigue en una hoja nueva.</p>`, true);
+    h += det('its', `Artículos (${p.items.filter(x => x.kind !== 'section').length})`, p.items.map((it, i) => it.kind === 'section'
+      ? det('i' + i, `§ ${esc(it.name)}`, `${F('Título de la sección', `items.${i}.name`)}${F('Subtítulo', `items.${i}.sub`)}${moveBtns('items', i, p.items.length, 'sección')}`)
+      : det('i' + i, `${i + 1}. ${esc(it.name)}${it.sub ? ' · ' + esc(it.sub) : ''}`, `
       ${F('Nombre', `items.${i}.name`)}${F('Detalle (ej. Vástago fijo)', `items.${i}.sub`)}
       ${imgField('Foto', `items.${i}.img`)}
-      ${F('Foto a la…', `items.${i}.imgSide`, { opts: [['l', 'Izquierda'], ['r', 'Derecha']] })}
+      ${F('Tamaño en la hoja', `items.${i}.span`, { opts: [[1, 'Normal (media hoja)'], [2, 'Ancho completo (listas muy largas)']], num: true })}
       ${F('Medidas', `items.${i}.items`, { rows: 5 })}${MEAS_HINT}
-      ${measOpts(`items.${i}.`)}
+      <div class="row2">${F('Unidad al final', `items.${i}.unit`, { ph: '”' })}${F('Espacio “2 ½”', `items.${i}.gap`, { chk: true })}</div>
+      ${F('Viñetas •', `items.${i}.bullets`, { chk: true })}
       ${moveBtns('items', i, p.items.length, 'artículo')}`, p.items.length === 1)).join('') +
-      `<button class="btn" data-act="add" data-p="items">＋ Agregar artículo</button>`, true);
+      `<div class="acts"><button class="btn" data-act="add" data-p="items">＋ Artículo</button><button class="btn" data-act="addSection">＋ Sección (título intermedio)</button></div>`, true);
   }
   ed.innerHTML = h;
   ed.scrollTop = top;
@@ -559,6 +666,7 @@ document.addEventListener('click', async e => {
       arr.push(path === 'groups' ? newGroup() : path === 'texts' ? newText() : newItem());
       openState[(path === 'groups' ? 'g' : path === 'texts' ? 't' : 'i') + (arr.length - 1)] = true; break;
     }
+    case 'addSection': p.items.push(newSection()); openState['i' + (p.items.length - 1)] = true; break;
     case 'del': get(p, path).splice(i, 1); break;
     case 'dupI': { const arr = get(p, path); arr.splice(i + 1, 0, clone(arr[i])); break; }
     case 'mv': { const arr = get(p, path), d = +b.dataset.d; [arr[i], arr[i + d]] = [arr[i + d], arr[i]]; break; }
@@ -581,15 +689,15 @@ function loadImage(file, max = 1400) {
       URL.revokeObjectURL(url);
       let out = c.toDataURL('image/webp', .88);
       if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/png');
-      res(out);
+      res({ src: out, w: im.width, h: im.height });
     };
     im.onerror = rej; im.src = url;
   });
 }
 async function applyImage(path, file) {
-  const src = await loadImage(file), p = page();
+  const { src, w, h } = await loadImage(file), p = page();
   if (path === '__new') p.images.push(newImage(src));
-  else set(p, path, src);
+  else { set(p, path, src); if (/\.img$/.test(path)) set(p, path.replace(/img$/, 'ar'), +(w / h).toFixed(4)); }
   renderAll(); save();
 }
 $('fileImg').addEventListener('change', async e => {
@@ -625,7 +733,7 @@ $('stage').addEventListener('pointerdown', e => {
 
 /* ---- Barra superior ---- */
 $('bPdf').onclick = () => { fillPrint(); setTimeout(() => window.print(), 150); };
-function fillPrint() { $('print').innerHTML = project.pages.map(p => pageHTML(p, false)).join(''); }
+function fillPrint() { $('print').innerHTML = project.pages.flatMap(p => pageSheets(p, false)).join(''); }
 window.addEventListener('beforeprint', fillPrint);
 $('bNew').onclick = () => {
   if (!confirm('¿Empezar un catálogo nuevo? Se borra lo actual (guarda antes tu archivo si lo necesitas).')) return;
