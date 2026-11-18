@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diseñador de Catálogo DRENHISA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#235296; --yellow:#fdc913; --navy:#1b2a4a; --green:#7ac143; --ink:#111;
+  --ui-bg:#f3f4f7; --ui-panel:#fff; --ui-line:#dfe2e8; --ui-text:#1d2433; --ui-mute:#6b7385; --ui-accent:#235296;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--ui-bg);color:var(--ui-text);font-size:13px}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- App shell ---------- */
+#app{display:grid;grid-template-columns:230px 370px 1fr;grid-template-rows:48px 1fr;height:100vh}
+#top{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--blue);color:#fff}
+#top h1{font-size:15px;margin:0 auto 0 0;font-weight:600;letter-spacing:.2px}
+#top .st{font-size:12px;opacity:.8;margin-right:6px}
+.btn{border:1px solid var(--ui-line);background:#fff;border-radius:7px;padding:6px 11px;cursor:pointer;font-weight:500}
+.btn:hover{background:#eef1f6}
+.btn.pri{background:var(--yellow);border-color:var(--yellow);color:#111;font-weight:600}
+.btn.pri:hover{filter:brightness(.95)}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn.danger{color:#b3261e}
+#top .btn{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+#top .btn:hover{background:rgba(255,255,255,.25)}
+#top .btn.pri{background:var(--yellow);color:#111;border-color:var(--yellow)}
+
+#side{background:var(--ui-panel);border-right:1px solid var(--ui-line);overflow:auto;padding:10px}
+#side .add{display:grid;gap:6px;margin-bottom:12px}
+.pg{display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid var(--ui-line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#fff}
+.pg.sel{border-color:var(--ui-accent);box-shadow:0 0 0 2px rgba(35,82,150,.15);background:#f4f8ff}
+.pg .n{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:11px;flex:none}
+.pg .t{flex:1;min-width:0}
+.pg .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pg .t small{color:var(--ui-mute)}
+.pg .ctl{display:flex;flex-direction:column;gap:2px}
+.pg .ctl button{border:0;background:none;cursor:pointer;padding:0 3px;color:var(--ui-mute);font-size:11px;line-height:1}
+.pg .ctl button:hover{color:var(--ui-text)}
+
+#editor{background:var(--ui-panel);border-right:1px solid var(--ui-line);overflow:auto;padding:12px 14px 40px}
+#editor h2{font-size:14px;margin:2px 0 10px}
+details{border:1px solid var(--ui-line);border-radius:9px;margin-bottom:10px;background:#fff}
+summary{cursor:pointer;padding:9px 11px;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px}
+summary::before{content:"▸";font-size:11px;color:var(--ui-mute);transition:.15s}
+details[open]>summary::before{transform:rotate(90deg)}
+details>.in{padding:2px 11px 11px;display:grid;gap:9px}
+details details{background:#fafbfd}
+.f{display:grid;gap:3px}
+.f>span{font-size:11.5px;color:var(--ui-mute);font-weight:500}
+.f input[type=text],.f input[type=number],.f select,.f textarea{width:100%;border:1px solid var(--ui-line);border-radius:6px;padding:6px 8px;background:#fff}
+.f textarea{resize:vertical;line-height:1.4}
+.f input:focus,.f select:focus,.f textarea:focus{outline:2px solid rgba(35,82,150,.35);border-color:var(--ui-accent)}
+.f.chk{display:flex;align-items:center;gap:7px}
+.f.chk>span{font-size:12.5px;color:var(--ui-text)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hint{font-size:11.5px;color:var(--ui-mute);margin:0;line-height:1.4}
+.imgf{display:flex;align-items:center;gap:8px}
+.imgf .th{width:46px;height:46px;border:1px dashed var(--ui-line);border-radius:6px;background:#f6f7fa center/contain no-repeat;flex:none}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+
+#stage{overflow:auto;padding:18px;display:flex;flex-direction:column;align-items:center;position:relative}
+.sizer{position:relative;flex:none;margin-bottom:18px}
+.warn.info{background:#e8f1ff;border-color:#b6d0f5;color:#16407a}
+.warn{position:sticky;top:0;z-index:5;background:#fff3cd;border:1px solid #f0cf65;color:#6b5200;border-radius:8px;padding:6px 12px;margin-bottom:10px;font-weight:500}
+#stagehint{color:var(--ui-mute);font-size:12px;margin-bottom:8px}
+
+/* ---------- PAGE (816 x 1056 px = Carta) ---------- */
+.page{position:relative;width:816px;height:1056px;background:#fff;overflow:hidden;color:var(--ink);
+  font-family:Inter,sans-serif;font-size:15px;line-height:1.55;transform-origin:0 0;
+  box-shadow:0 2px 14px rgba(0,0,0,.18);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page *{box-sizing:border-box}
+.page .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.page h1{font-family:Poppins,sans-serif;font-style:italic;font-weight:700;font-size:25px;line-height:1.4;letter-spacing:-.6px;margin:0;color:#000}
+.page .sub{font-style:italic;font-size:14px;color:#222;margin-top:1px}
+.page .logo{object-fit:contain;max-width:230px}
+.ac-blue{color:var(--blue)}.ac-green{color:var(--green)}.ac-yellow{color:#e0aa00}.ac-navy{color:var(--navy)}
+.page .pad{position:absolute;left:44px;right:44px;top:42px}
+.page .desc{margin:18px 0 0;text-align:justify;line-height:2.05;font-size:15.5px}
+.page .desc p{margin:0 0 14px}
+.page .usos{display:flex;align-items:center;gap:6px;margin-top:26px}
+.page .usos b{font-family:Poppins,sans-serif;font-weight:700;font-size:17px;color:var(--navy);margin-right:8px}
+.page .usos .u{flex:1;text-align:center;font-size:16px;line-height:1.3;color:#2a3652;font-weight:300}
+.page .tbl{margin-top:34px}
+.page .tbl h3{font-family:Poppins,sans-serif;text-align:center;color:var(--navy);font-size:16.5px;font-weight:600;margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid #ddd;text-transform:uppercase}
+.page .tbl .r{display:grid;align-items:center;padding:16px 0}
+.page .tbl .r .lb{font-family:Poppins,sans-serif;font-weight:700;font-size:15px;color:var(--navy);text-transform:uppercase}
+.page .tbl .r .vv{text-align:center;font-style:italic;font-size:16.5px;color:#2a3652}
+.page .grp{margin-top:24px}
+.page .grps{display:flex;gap:30px;align-items:flex-start;margin-top:24px}
+.page .grps .grp{margin-top:0}
+.page .grp h4{font-family:Poppins,sans-serif;text-align:center;color:var(--navy);font-size:19px;font-weight:600;margin:0 0 10px;padding-bottom:7px;border-bottom:1px solid #ddd}
+.page .cols{display:flex;gap:34px;justify-content:center}
+.page ul.m{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:max-content max-content;column-gap:14px}
+.page ul.m li{display:contents}
+.page ul.m li>*{padding:2px 0;line-height:1.35}
+.page ul.m .bu::before{content:"•";margin-right:6px}
+.page ul.m .lb{font-weight:700;color:#111}
+.page ul.m .vv{font-weight:300}
+.page ul.m.noval{grid-template-columns:max-content}
+.page .chips{display:flex;flex-wrap:wrap;gap:6px 22px;justify-content:center;font-style:italic;font-weight:700;font-size:19px;color:var(--navy);padding-top:6px}
+.page .el{position:absolute}
+.page .el img{display:block;width:100%;height:auto}
+.page .el.tx{font-family:Poppins,sans-serif;line-height:1.25;color:var(--navy);font-weight:700}
+.page .el .rh{display:none}
+.edit .page .el{cursor:move;outline:1px dashed rgba(35,82,150,.0)}
+.edit .page .el:hover,.edit .page .el.sel{outline:1px dashed rgba(35,82,150,.8)}
+.edit .page .el .rh{display:block;position:absolute;right:-6px;bottom:-6px;width:13px;height:13px;border-radius:3px;background:var(--ui-accent);cursor:nwse-resize}
+.edit .page [data-upload]{cursor:pointer}
+.edit .page .ph{border:1.5px dashed #b9c0cf;border-radius:8px;color:#8b93a6;font-size:11px;display:grid;place-items:center;text-align:center;background:#fafbfd}
+.page .gh{position:absolute;left:44px;right:44px;top:42px}
+.page .bar{display:none;width:58px;height:5px;border-radius:3px;background:var(--yellow);margin-top:9px}
+.page.s-lines .bar,.page.s-cards .bar{display:block}
+.page.s-clean .sec .bar{display:none}
+.page .it{position:absolute;display:flex;align-items:center;gap:14px}
+.page .it .im{flex:none;display:grid;place-items:center}
+.page .it .im img{display:block;mix-blend-mode:multiply}
+.page .it .tx{flex:1;min-width:0}
+.page .it .nm{font-family:Poppins,sans-serif;font-weight:600;color:var(--navy);text-align:center;line-height:1.22}
+.page .it .ns{font-family:Poppins,sans-serif;font-size:12px;font-weight:500;font-style:italic;text-align:center;color:var(--navy);margin-top:1px}
+.page .it .rule{border:0;border-top:1px solid #d9dde5;margin:7px 0 5px}
+.page .it ul.m li>*{padding:1px 0;line-height:1.22}
+.page .it .cols{gap:24px}
+.page .it.wide .cols{gap:30px}
+.page .sec{position:absolute}
+.page .sec h2{font-family:Poppins,sans-serif;font-style:italic;font-weight:700;font-size:23px;line-height:1.3;letter-spacing:-.5px;margin:0;color:#000}
+.page .sec .bar{width:100%;height:2px;border-radius:0;background:#dde2ea;margin-top:6px}
+.page.s-lines .it::after{content:"";position:absolute;left:0;right:0;bottom:calc(var(--gy) / -2);border-top:1px solid #dfe3ea}
+.page.s-lines .it.last::after{display:none}
+.page.s-cards .it{background:#f4f7fc;border:1px solid #dbe4f2;border-radius:14px;padding:12px 14px}
+.page.s-cards .it .im{background:#fff;border-radius:10px}
+.page.s-cards .it .nm{background:var(--blue);color:#fff;border-radius:8px;padding:5px 10px;margin-bottom:8px}
+.page.s-cards .it .ns{margin:-3px 0 6px}
+.page.s-cards .it .rule{display:none}
+.page .it .im.ph{border:1.5px dashed #b9c0cf;border-radius:8px;color:#8b93a6;font-size:11px;text-align:center;background:#fafbfd}
+
+/* ---------- Print ---------- */
+#print{display:none}
+@page{size:8.5in 11in;margin:0}
+@media print{
+  html,body{height:auto;background:#fff}
+  #app{display:none!important}
+  #print{display:block}
+  #print .page{box-shadow:none;margin:0;page-break-after:always;break-after:page;transform:none}
+}
+@media (max-width:1100px){#app{grid-template-columns:180px 320px 1fr}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <h1>📘 Diseñador de Catálogo · DRENHISA</h1>
+    <span class="st" id="status"></span>
+    <button class="btn" id="bNew">Nuevo</button>
+    <button class="btn" id="bOpen">Abrir…</button>
+    <button class="btn" id="bSave">Guardar archivo</button>
+    <button class="btn pri" id="bPdf">Exportar PDF</button>
+  </div>
+  <aside id="side"></aside>
+  <section id="editor"></section>
+  <main id="stage"></main>
+</div>
+<div id="print"></div>
+<input type="file" id="fileImg" accept="image/*" hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+
+<script>
+/* =========================================================
+   Utilidades
+   ========================================================= */
+const PW = 816, PH = 1056;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const get = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
+const set = (o, p, v) => { const ks = p.split('.'), l = ks.pop(); ks.reduce((a, k) => a[k], o)[l] = v; };
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clone = o => JSON.parse(JSON.stringify(o));
+
+/* Texto enriquecido mínimo: **negrita**, [[acento]] y saltos de línea */
+function rt(s, accent) {
+  return esc(s)
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/\[\[(.+?)\]\]/g, `<span class="ac-${accent || 'blue'}">$1</span>`)
+    .replace(/\n/g, '<br>');
+}
+
+/* Medidas: "1/2", "2 1/2" -> ½”, 2½”   |   "1 | 50mts y 100mts" -> etiqueta + valor */
+const FR = {'1/2':'½','1/4':'¼','3/4':'¾','1/8':'⅛','3/8':'⅜','5/8':'⅝','7/8':'⅞','1/3':'⅓','2/3':'⅔'};
+function fmtMeasure(t, unit, gap) {
+  let s = t.trim();
+  if (!s) return s;
+  const parts = s.split(/\s*[x×]\s*/i);
+  if (parts.length > 1 && parts.every(x => /^[\d\s\/.,½¼¾⅛⅜⅝⅞⅓⅔”"″']+$/.test(x)))
+    return parts.map(x => fmtMeasure(x, unit, gap)).join('\u2009x\u2009');
+  s = s.replace(/(\d+)\s+(\d+\/\d+)/g, (m, w, f) => FR[f] ? w + (gap ? ' ' : '') + FR[f] : m)
+       .replace(/(^|[^\d])(\d+\/\d+)/g, (m, pre, f) => FR[f] ? pre + FR[f] : m);
+  s = s.replace(/["”″]|''/g, '');            // quita comillas escritas a mano
+  if (unit && /^(\d+([.,]\d+)?\s?[½¼¾⅛⅜⅝⅞⅓⅔]?|[½¼¾⅛⅜⅝⅞⅓⅔])$/.test(s)) s += unit;
+  return s;
+}
+function parseMeasures(text, unit, gap, doFmt = true) {
+  const out = [];
+  String(text || '').split('\n').forEach(line => {
+    if (!line.trim()) return;
+    if (line.includes('|')) {
+      const [a, ...b] = line.split('|');
+      out.push({ l: doFmt ? fmtMeasure(a, unit, gap) : a.trim(), v: b.join('|').trim() });
+    } else {
+      line.split(/[,;]/).forEach(x => { if (x.trim()) out.push({ l: doFmt ? fmtMeasure(x, unit, gap) : x.trim(), v: '' }); });
+    }
+  });
+  return out;
+}
+
+/* =========================================================
+   Modelo y datos de ejemplo
+   ========================================================= */
+const newProduct = () => ({
+  id: uid(), type: 'product', accent: 'blue',
+  title: 'Nombre del producto para [[uso destacado]]', subtitle: '', logo: '', logoH: 56,
+  desc: 'Descripción del producto. Usa **negritas** para resaltar.',
+  usos: '', tableTitle: '', tableRows: '',
+  groupsLayout: 'side', groups: [], images: [], texts: []
+});
+const newGroup = () => ({ heading: '', items: '', style: 'list', cols: 0, max: 8, unit: '”', gap: false, bullets: true, w: 0 });
+const newImage = src => ({ src, x: 40, y: 700, w: 400 });
+const newText = () => ({ text: 'TEXTO DESTACADO', x: 440, y: 800, w: 330, size: 32, align: 'center', color: 'navy', weight: 700 });
+const newGrid = () => ({
+  id: uid(), type: 'grid', title: 'Título de la página', subtitle: '', accent: 'blue',
+  style: 'clean', gapY: 0, snap: 60, imgW: 128, imgH: 150, items: [newItem()]
+});
+const newItem = () => ({ kind: 'item', name: 'Nombre del artículo', sub: '', img: '', ar: 1, span: 1, items: '', unit: '”', gap: true, bullets: true });
+const newSection = () => ({ kind: 'section', name: 'Título de la sección', sub: '' });
+
+const SAMPLE = () => ({ pages: [
+  { id: uid(), type: 'product', accent: 'blue',
+    title: 'Tubería de Polietileno de Alta Densidad para conducción de [[Agua Potable]]',
+    subtitle: 'PE 4710', logo: '', logoH: 56,
+    desc: 'Las **tuberías PEAD lisas** representan la mejor opción de tuberías flexibles para transporte de agua potable, son fabricadas en distintos diámetros y calibres para adecuarse a tu obra y se unen mediante termofusión.',
+    usos: 'Líneas de conducción\nRedes de distribución\nTomas domiciliarias\nRiego agrícola\nBombeo de pozos profundos',
+    tableTitle: 'Presiones de trabajo por calibre',
+    tableRows: 'Calibre | RD 7.0 | RD 7.3 | RD 9 | RD 11 | RD 13.5 | RD 15.5 | RD 17\nPresión kg/cm² | 23 | 22 | 17 | 14 | 11 | 10 | 9\nPresión psi | 327 | 313 | 242 | 199 | 157 | 142 | 128',
+    groupsLayout: 'side', groups: [], images: [],
+    texts: [{ text: 'ROLLOS DE\n100MTS\nTRAMOS DE\n6 Y 12MTS', x: 470, y: 760, w: 300, size: 36, align: 'center', color: 'navy', weight: 700 }] },
+  { id: uid(), type: 'product', accent: 'blue',
+    title: 'Manguera de Polietileno de Baja Densidad para conducción de [[Agua]]', subtitle: '', logo: '', logoH: 56,
+    desc: 'El **poliducto negro** es una solución utilizada generalmente para riego o instalaciones de agua en sistemas residenciales.\nLa manguera se maneja en dos calibres, Cédula 40 y Cédula 80.',
+    usos: 'Uso domiciliario\nRiego agrícola\nTomas domiciliarias\nBombeo de pozos\nLíneas de conducción',
+    tableTitle: '', tableRows: '', groupsLayout: 'side',
+    groups: [
+      { heading: 'Cédula 40', style: 'list', cols: 0, max: 8, unit: '”', gap: false, bullets: true, w: 0,
+        items: '1/2 | 100mts\n3/4 | 100mts\n1 | 50mts y 100mts\n1 1/4 | 50mts y 100mts\n1 1/2 | 50mts y 100mts\n2 | 50mts y 100mts\n3 | 50mts\n4 | 50mts' },
+      { heading: 'Cédula 80', style: 'list', cols: 0, max: 8, unit: '”', gap: false, bullets: true, w: 0,
+        items: '1/2 | 100mts\n3/4 | 100mts\n1 | 50mts y 100mts\n1 1/4 | 50mts y 100mts\n1 1/2 | 50mts y 100mts\n2 | 100mts\n3 | 50mts' }
+    ], images: [], texts: [] },
+  { id: uid(), type: 'grid', title: 'Válvulas Bridadas para Agua Potable', subtitle: 'Presión de trabajo: 250 PSI',
+    accent: 'blue', style: 'clean', gapY: 0, snap: 60, imgW: 128, imgH: 150,
+    items: [
+      { kind: 'item', name: 'Válvula de Compuerta', sub: 'Vástago Fijo', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
+      { kind: 'item', name: 'Válvula Mariposa', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
+      { kind: 'item', name: 'Válvula de Compuerta', sub: 'Vástago Saliente', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' },
+      { kind: 'item', name: 'Válvula Check', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
+      { kind: 'item', name: 'Medidor de Flujo', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' },
+      { kind: 'item', name: 'Filtro “Y”', sub: '', img: '', ar: 1, span: 1, unit: '”', gap: true, bullets: true, items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' }
+    ] }
+] });
+
+/* =========================================================
+   Estado + persistencia (IndexedDB, para guardar fotos sin límite)
+   ========================================================= */
+let project = SAMPLE();
+let cur = 0;
+let scale = 1;
+
+const idb = {
+  db: null,
+  open() {
+    return new Promise(res => {
+      try {
+        const r = indexedDB.open('drenhisa-catalogo', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('kv');
+        r.onsuccess = () => { this.db = r.result; res(); };
+        r.onerror = () => res();
+      } catch (e) { res(); }
+    });
+  },
+  get(k) { return new Promise(res => { if (!this.db) return res(null); const q = this.db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); },
+  put(k, v) { return new Promise(res => { if (!this.db) return res(); const t = this.db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = () => res(true); t.onerror = () => res(false); }); }
+};
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  $('status').textContent = 'Guardando…';
+  saveTimer = setTimeout(async () => {
+    const ok = await idb.put('project', JSON.stringify(project));
+    $('status').textContent = ok ? 'Guardado en este navegador ✓' : 'No se pudo autoguardar (usa “Guardar archivo”)';
+  }, 400);
+}
+const $ = id => document.getElementById(id);
+const page = () => project.pages[cur];
+
+/* =========================================================
+   Render de páginas (misma función para vista previa e impresión)
+   ========================================================= */
+function measListHTML(g, o) {
+  // g: {items, unit, gap, bullets, cols, max}
+  const list = parseMeasures(g.items, g.unit, g.gap);
+  if (!list.length) return '';
+  const n = list.length, max = Math.max(1, +g.max || 8);
+  const cols = +g.cols > 0 ? +g.cols : Math.ceil(n / max);
+  const per = Math.ceil(n / cols);
+  let html = '';
+  for (let c = 0; c < cols; c++) {
+    const chunk = list.slice(c * per, (c + 1) * per);
+    if (!chunk.length) continue;
+    const hasVal = chunk.some(x => x.v);
+    html += `<ul class="m ${hasVal ? '' : 'noval'}">` + chunk.map(x =>
+      `<li><span class="lb ${g.bullets ? 'bu' : ''}" style="${hasVal ? '' : 'font-weight:400'}">${esc(x.l)}</span>${hasVal ? `<span class="vv">${esc(x.v)}</span>` : ''}</li>`
+    ).join('') + '</ul>';
+  }
+  return `<div class="cols">${html}</div>`;
+}
+
+function groupHTML(g) {
+  const w = g.w > 0 ? `style="width:${g.w}%;flex:none"` : 'style="flex:1;min-width:0"';
+  let body;
+  if (g.style === 'chips') {
+    const l = parseMeasures(g.items, g.unit, g.gap);
+    body = `<div class="chips">${l.map(x => `<span>${esc(x.l)}</span>`).join('')}</div>`;
+  } else body = measListHTML(g);
+  return `<div class="grp" ${w}>${g.heading ? `<h4>${esc(g.heading)}</h4>` : ''}${body}</div>`;
+}
+
+function productHTML(p, edit) {
+  const usos = p.usos.split('\n').filter(x => x.trim());
+  const rows = p.tableRows.split('\n').filter(x => x.trim()).map(r => r.split('|').map(c => c.trim()));
+  const cols = rows.reduce((m, r) => Math.max(m, r.length - 1), 0);
+  let html = `<div class="pad flow">`;
+  html += `<div class="hd"><div><h1>${rt(p.title, p.accent)}</h1>${p.subtitle ? `<div class="sub">${esc(p.subtitle)}</div>` : ''}</div>`;
+  if (p.logo) html += `<img class="logo" src="${p.logo}" style="height:${p.logoH || 56}px">`;
+  html += `</div>`;
+  if (p.desc.trim()) html += `<div class="desc">${p.desc.split('\n').map(l => `<p>${rt(l, p.accent)}</p>`).join('')}</div>`;
+  if (usos.length) html += `<div class="usos"><b>USOS:</b>${usos.map(u => `<div class="u">${esc(u)}</div>`).join('')}</div>`;
+  if (rows.length || p.tableTitle) {
+    html += `<div class="tbl">${p.tableTitle ? `<h3>${esc(p.tableTitle)}</h3>` : ''}`;
+    html += rows.map(r => `<div class="r" style="grid-template-columns:minmax(90px,auto) repeat(${cols},1fr)"><div class="lb">${esc(r[0])}</div>${r.slice(1).map(c => `<div class="vv">${esc(c)}</div>`).join('')}</div>`).join('');
+    html += `</div>`;
+  }
+  if (p.groups.length) {
+    html += p.groupsLayout === 'side'
+      ? `<div class="grps">${p.groups.map(groupHTML).join('')}</div>`
+      : p.groups.map(groupHTML).join('');
+  }
+  html += `</div>`;
+  p.images.forEach((im, i) => {
+    html += `<div class="el" ${edit ? `data-el="images.${i}"` : ''} style="left:${im.x}px;top:${im.y}px;width:${im.w}px"><img src="${im.src}" draggable="false">${edit ? '<div class="rh" data-resize></div>' : ''}</div>`;
+  });
+  const COL = { navy: 'var(--navy)', blue: 'var(--blue)', black: '#111', white: '#fff', yellow: 'var(--yellow)', green: 'var(--green)' };
+  p.texts.forEach((t, i) => {
+    html += `<div class="el tx" ${edit ? `data-el="texts.${i}"` : ''} style="left:${t.x}px;top:${t.y}px;width:${t.w}px;font-size:${t.size}px;text-align:${t.align};color:${COL[t.color] || COL.navy};font-weight:${t.weight}">${rt(t.text, p.accent)}${edit ? '<div class="rh" data-resize></div>' : ''}</div>`;
+  });
+  return html;
+}
+
+/* ---------- Motor de la página "Varios artículos" ----------
+   · Medidas siempre en 2 columnas (mitad y mitad). Si la lista es enorme, el artículo
+     puede ocupar el ancho completo y repartir en hasta 5 columnas.
+   · Los artículos se reparten izquierda/derecha. Si al empezar una fila las dos columnas
+     difieren por poco (tolerancia), se alinean; si difieren mucho, cada lado sigue su camino.
+   · Si el contenido no cabe, continúa solo en otra hoja.                                   */
+const LAY = { x: 44, W: 728, gap: 28, bottom: 1016 };
+let _meas;
+function measureEl(style) {
+  if (!_meas) {
+    _meas = document.createElement('div');
+    _meas.style.cssText = 'position:absolute;left:-12000px;top:0;visibility:hidden;width:816px;height:auto;overflow:visible;box-shadow:none';
+    document.body.appendChild(_meas);
+  }
+  _meas.className = 'page s-' + style;
+  return _meas;
+}
+function imgSize(it, p, iw) {
+  const ar = it.ar > 0 ? it.ar : 1, maxH = p.imgH || 150;
+  let w = iw, h = w / ar;
+  if (h > maxH) { h = maxH; w = h * ar; }
+  return { w: Math.round(w), h: Math.round(h) };
+}
+function measFont(list, rows, wide) {
+  const longest = list.reduce((m, x) => Math.max(m, x.l.length), 0);
+  let s = rows <= 8 ? 15.5 : rows <= 10 ? 14.5 : rows <= 13 ? 13 : rows <= 15 ? 12 : 11.5;
+  if (wide) return Math.min(s, 13.5);
+  if (longest >= 11) s = Math.min(s, 12); else if (longest >= 8) s = Math.min(s, 13.5);
+  return s;
+}
+const nameFont = (len, cards) => { const k = cards ? .9 : 1; return len <= 20 * k ? 17 : len <= 28 * k ? 15 : 13.5; };
+
+function headerHTML(p, style) {
+  return `<div class="gh"><h1>${rt(p.title, p.accent)}</h1>${p.subtitle ? `<div class="sub">${esc(p.subtitle)}</div>` : ''}<div class="bar"></div></div>`;
+}
+
+function itemHTML(it, p, o) {
+  const pos = `left:${o.x || 0}px;top:${o.y || 0}px;width:${o.w}px`;
+  if (it.kind === 'section')
+    return `<div class="sec" style="${pos}"><h2>${rt(it.name, p.accent)}</h2>${it.sub ? `<div class="sub">${esc(it.sub)}</div>` : ''}<div class="bar"></div></div>`;
+  const cards = p.style === 'cards';
+  const iw = (p.imgW || 128) - (cards ? 16 : 0);
+  const up = o.edit ? `data-upload="items.${o.i}.img"` : '';
+  let im;
+  if (it.img) { const z = imgSize(it, p, iw); im = `<div class="im" ${up} style="width:${iw}px;height:${z.h}px"><img src="${it.img}" style="width:${z.w}px;height:${z.h}px" draggable="false"></div>`; }
+  else if (o.edit) im = `<div class="im ph" ${up} style="width:${iw}px;height:${Math.min(100, p.imgH || 150)}px">＋ foto</div>`;
+  else im = `<div class="im" style="width:${iw}px"></div>`;
+
+  const list = parseMeasures(it.items, it.unit, it.gap);
+  const n = list.length, wide = !!o.wide;
+  const cols = wide ? Math.min(5, Math.max(2, Math.ceil(n / 10))) : 2;
+  const rows = Math.max(1, Math.ceil(n / cols));
+  const fs = measFont(list, rows, wide);
+  let lists = '';
+  for (let c = 0; c < cols; c++) {
+    const chunk = list.slice(c * rows, (c + 1) * rows); if (!chunk.length) continue;
+    const hasVal = chunk.some(x => x.v);
+    lists += `<ul class="m ${hasVal ? '' : 'noval'}">` + chunk.map(x => `<li><span class="lb ${it.bullets !== false ? 'bu' : ''}" style="${hasVal ? '' : 'font-weight:400'}">${esc(x.l)}</span>${hasVal ? `<span class="vv">${esc(x.v)}</span>` : ''}</li>`).join('') + '</ul>';
+  }
+  return `<div class="it ${wide ? 'wide' : ''} ${o.last ? 'last' : ''}" style="${pos}">${im}<div class="tx">
+    <div class="nm" style="font-size:${nameFont(it.name.length, cards)}px">${esc(it.name)}</div>${it.sub ? `<div class="ns">${esc(it.sub)}</div>` : ''}<hr class="rule">
+    <div class="cols" style="font-size:${fs}px">${lists}</div></div></div>`;
+}
+
+function layoutGrid(p) {
+  const st = p.style || 'clean';
+  const gy = p.gapY > 0 ? p.gapY : ({ clean: 34, lines: 40, cards: 20 }[st] || 42);
+  const laneW = (LAY.W - LAY.gap) / 2, tol = p.snap == null ? 60 : p.snap;
+  const m = measureEl(st);
+  m.innerHTML = `<div class="gh" style="left:0;right:auto;width:${LAY.W}px">${headerHTML(p).replace(/^<div class="gh">/, '').replace(/<\/div>$/, '')}</div>`;
+  const y0 = 42 + m.firstChild.offsetHeight + 28;
+  const items = p.items.map((it, i) => ({ it, i, sec: it.kind === 'section', wide: it.kind !== 'section' && +it.span === 2 }));
+  m.innerHTML = items.map(o => itemHTML(o.it, p, { i: o.i, wide: o.wide, w: (o.sec || o.wide) ? LAY.W : laneW })).join('');
+  items.forEach((o, k) => { o.h = m.children[k].offsetHeight; });
+
+  const sheets = []; let sh, yL, yR;
+  const newSheet = () => { sh = []; sheets.push(sh); yL = yR = y0; };
+  newSheet();
+  let k = 0;
+  while (k < items.length) {
+    const a = items[k];
+    if (a.sec || a.wide) {
+      let y = Math.max(yL, yR);
+      const need = a.h + (a.sec && items[k + 1] ? gy * .6 + items[k + 1].h : 0);
+      if (y + need > LAY.bottom && sh.length) { newSheet(); y = y0; }
+      sh.push({ ...a, x: LAY.x, w: LAY.W, y });
+      yL = yR = y + a.h + (a.sec ? gy * .6 : gy); k++; continue;
+    }
+    const b = (items[k + 1] && !items[k + 1].sec && !items[k + 1].wide) ? items[k + 1] : null;
+    let ya = yL, yb = yR;
+    if (Math.abs(yL - yR) <= tol) ya = yb = Math.max(yL, yR);          // diferencia pequeña → alinear
+    if ((ya + a.h > LAY.bottom || (b && yb + b.h > LAY.bottom)) && sh.length) { newSheet(); ya = yb = y0; }
+    sh.push({ ...a, x: LAY.x, w: laneW, y: ya });
+    if (b) sh.push({ ...b, x: LAY.x + laneW + LAY.gap, w: laneW, y: yb });
+    yL = ya + a.h + gy; if (b) yR = yb + b.h + gy;
+    k += b ? 2 : 1;
+  }
+  sheets.forEach(list => {                                   // sin separador en la última fila de cada lado
+    const fs = list.filter(o => o.sec || o.wide), wsY = fs.length ? Math.max(...fs.map(o => o.y)) : -1;
+    const mb = Math.max(...list.map(o => o.y + o.h));
+    [true, false].forEach(left => {
+      const xs = list.filter(o => !o.sec && !o.wide && (o.x < LAY.x + laneW) === left && o.y > wsY);
+      if (xs.length) xs.reduce((a, b) => b.y > a.y ? b : a).last = true;
+    });
+    fs.forEach(o => { if (o.y + o.h >= mb - 1) o.last = true; });
+  });
+  return { sheets, gy, st };
+}
+
+function gridSheets(p, edit) {
+  const { sheets, gy, st } = layoutGrid(p);
+  return sheets.map(list => `<div class="page s-${st}" style="--gy:${gy}px">${headerHTML(p)}${list.map(o => itemHTML(o.it, p, { i: o.i, wide: o.wide, w: o.w, x: o.x, y: o.y, edit, last: o.last })).join('')}</div>`);
+}
+
+const pageSheets = (p, edit) => p.type === 'product' ? [`<div class="page">${productHTML(p, edit)}</div>`] : gridSheets(p, edit);
+
+/* =========================================================
+   Vista previa
+   ========================================================= */
+function renderPreview() {
+  const st = $('stage');
+  const fit = Math.min((st.clientWidth - 36) / PW, (st.clientHeight - 70) / PH);
+  scale = Math.max(.3, Math.min(fit, 1.4));
+  st.classList.add('edit');
+  const p = page(), sheets = pageSheets(p, true);
+  const hint = p.type === 'product' ? 'Arrastra fotos/textos en la página · esquina azul = cambiar tamaño' : 'Clic o arrastra una imagen sobre cada “＋ foto” · las hojas se agregan solas';
+  st.innerHTML = (sheets.length > 1 ? `<div class="warn info">Este conjunto ocupa ${sheets.length} hojas: se reparte solo.</div>` : '') +
+    `<div id="stagehint">${hint}</div>` +
+    sheets.map(h => `<div class="sizer" style="width:${PW * scale}px;height:${PH * scale}px">${h}</div>`).join('');
+  st.querySelectorAll('.page').forEach(pg => { pg.style.transform = `scale(${scale})`; });
+  const flow = st.querySelector('.page .flow');
+  if (flow && p.type === 'product' && flow.offsetTop + flow.offsetHeight > PH - 20)
+    st.insertAdjacentHTML('afterbegin', '<div class="warn">⚠ El contenido se sale de la página: reduce textos o tamaños.</div>');
+}
+
+function renderSide() {
+  $('side').innerHTML = `
+    <div class="add">
+      <button class="btn pri" data-act="addPage" data-t="product">＋ Página de producto</button>
+      <button class="btn pri" data-act="addPage" data-t="grid">＋ Página con varios artículos</button>
+    </div>` + project.pages.map((p, i) => `
+    <div class="pg ${i === cur ? 'sel' : ''}" data-act="sel" data-i="${i}">
+      <span class="n">${i + 1}</span>
+      <span class="t"><b>${esc((p.title || '').replace(/\[\[|\]\]/g, '') || 'Sin título')}</b><small>${p.type === 'product' ? 'Producto' : 'Varios artículos (' + p.items.filter(x => x.kind !== 'section').length + ')'}</small></span>
+      <span class="ctl"><button data-act="pgUp" data-i="${i}" title="Subir">▲</button><button data-act="pgDown" data-i="${i}" title="Bajar">▼</button></span>
+    </div>`).join('') + `
+    <div class="acts" style="margin-top:10px">
+      <button class="btn sm" data-act="dupPage">Duplicar</button>
+      <button class="btn sm danger" data-act="delPage">Eliminar</button>
+    </div>`;
+}
+
+/* =========================================================
+   Editor (formularios)
+   ========================================================= */
+const ACC = [['blue', 'Azul'], ['green', 'Verde'], ['yellow', 'Amarillo'], ['navy', 'Azul marino']];
+function F(label, path, o = {}) {
+  const v = get(page(), path);
+  const a = `data-p="${path}"`;
+  if (o.chk) return `<label class="f chk"><input type="checkbox" ${a} ${v ? 'checked' : ''}><span>${label}</span></label>`;
+  let inner;
+  if (o.opts) inner = `<select ${a} ${o.num ? 'data-num' : ''}>${o.opts.map(([k, t]) => `<option value="${k}" ${String(v) === String(k) ? 'selected' : ''}>${t}</option>`).join('')}</select>`;
+  else if (o.rows) inner = `<textarea ${a} rows="${o.rows}" placeholder="${esc(o.ph || '')}">${esc(v)}</textarea>`;
+  else if (o.type === 'number') inner = `<input type="number" ${a} data-num value="${esc(v)}" ${o.min != null ? `min="${o.min}"` : ''} ${o.max != null ? `max="${o.max}"` : ''}>`;
+  else inner = `<input type="text" ${a} value="${esc(v)}" placeholder="${esc(o.ph || '')}">`;
+  return `<label class="f"><span>${label}</span>${inner}</label>`;
+}
+function imgField(label, path) {
+  const v = get(page(), path);
+  return `<div class="f"><span>${label}</span><div class="imgf"><div class="th" style="${v ? `background-image:url(${v})` : ''}"></div>
+    <button class="btn sm" data-act="upload" data-p="${path}">${v ? 'Cambiar' : 'Subir'}</button>${v ? `<button class="btn sm" data-act="clearImg" data-p="${path}">Quitar</button>` : ''}</div></div>`;
+}
+const MEAS_HINT = '<p class="hint">Una medida por línea o separadas por coma. Escribe <b>1/2</b> o <b>2 1/2</b> y se convierte a ½” y 2½”. Con valor: <b>1 | 50mts y 100mts</b></p>';
+
+function measOpts(base) {
+  return `<div class="row2">${F('Unidad al final', base + 'unit', { ph: '”' })}${F('Máx. por columna', base + 'max', { type: 'number', min: 1 })}</div>
+    <div class="row2">${F('Columnas', base + 'cols', { opts: [[0, 'Automático'], [1, '1'], [2, '2'], [3, '3'], [4, '4']], num: true })}
+    ${F('Espacio “2 ½”', base + 'gap', { chk: true })}</div>${F('Viñetas •', base + 'bullets', { chk: true })}`;
+}
+
+function moveBtns(path, i, n, label) {
+  return `<div class="acts"><button class="btn sm" data-act="mv" data-p="${path}" data-i="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''}>↑ Subir</button>
+    <button class="btn sm" data-act="mv" data-p="${path}" data-i="${i}" data-d="1" ${i === n - 1 ? 'disabled' : ''}>↓ Bajar</button>
+    <button class="btn sm" data-act="dupI" data-p="${path}" data-i="${i}">Duplicar</button>
+    <button class="btn sm danger" data-act="del" data-p="${path}" data-i="${i}">Eliminar ${label}</button></div>`;
+}
+
+const openState = {};
+function det(key, title, body, def = false) {
+  const open = key in openState ? openState[key] : def;
+  return `<details data-k="${key}" ${open ? 'open' : ''}><summary>${title}</summary><div class="in">${body}</div></details>`;
+}
+
+function renderEditor() {
+  const p = page(), ed = $('editor'), top = ed.scrollTop;
+  let h = `<h2>Página ${cur + 1} · ${p.type === 'product' ? 'Producto completo' : 'Varios artículos'}</h2>`;
+  if (p.type === 'product') {
+    h += det('hd', 'Encabezado', `
+      ${F('Título', 'title', { rows: 2 })}
+      <p class="hint">Rodea con [[dobles corchetes]] las palabras que van en color. **Negritas** también funciona.</p>
+      ${F('Subtítulo / marca', 'subtitle')}
+      ${F('Color de acento', 'accent', { opts: ACC })}
+      ${imgField('Logo (arriba a la derecha)', 'logo')}
+      ${p.logo ? F('Alto del logo (px)', 'logoH', { type: 'number', min: 20 }) : ''}`, true);
+    h += det('desc', 'Descripción', `${F('Texto (cada línea = un párrafo)', 'desc', { rows: 6 })}`, true);
+    h += det('usos', 'Usos', `${F('Un uso por línea', 'usos', { rows: 5 })}`);
+    h += det('tbl', 'Tabla (calibres, presiones…)', `
+      ${F('Título de la tabla', 'tableTitle')}
+      ${F('Filas — separa las columnas con |', 'tableRows', { rows: 5, ph: 'Calibre | RD 7 | RD 9\nPresión | 23 | 17' })}
+      <p class="hint">La primera columna es la etiqueta; el número de columnas se ajusta solo.</p>`);
+    h += det('grps', `Listas de medidas (${p.groups.length})`, `
+      ${F('Disposición de grupos', 'groupsLayout', { opts: [['side', 'Lado a lado'], ['stack', 'Uno debajo de otro']] })}
+      ${p.groups.map((g, i) => det('g' + i, esc(g.heading || 'Grupo ' + (i + 1)), `
+        ${F('Encabezado (ej. Cédula 40)', `groups.${i}.heading`)}
+        ${F('Medidas', `groups.${i}.items`, { rows: 8 })}${MEAS_HINT}
+        ${F('Estilo', `groups.${i}.style`, { opts: [['list', 'Lista'], ['chips', 'En línea (diámetros)']] })}
+        ${F('Ancho (% — 0 = automático)', `groups.${i}.w`, { type: 'number', min: 0, max: 100 })}
+        ${measOpts(`groups.${i}.`)}
+        ${moveBtns('groups', i, p.groups.length, 'grupo')}`, p.groups.length === 1)).join('')}
+      <button class="btn" data-act="add" data-p="groups">＋ Agregar lista de medidas</button>`);
+    h += det('imgs', `Imágenes (${p.images.length})`, `
+      ${p.images.map((im, i) => `<div class="f"><span>Imagen ${i + 1}</span><div class="imgf"><div class="th" style="background-image:url(${im.src})"></div>
+        <button class="btn sm" data-act="upload" data-p="images.${i}.src">Cambiar</button><button class="btn sm danger" data-act="del" data-p="images" data-i="${i}">Quitar</button></div>
+        <div class="row2">${F('X', `images.${i}.x`, { type: 'number' })}${F('Y', `images.${i}.y`, { type: 'number' })}</div>
+        ${F('Ancho (px)', `images.${i}.w`, { type: 'number', min: 30 })}</div>`).join('')}
+      <button class="btn" data-act="addImage">＋ Agregar imagen</button>
+      <p class="hint">Después arrástrala directo sobre la página. Usa PNG sin fondo para que se vea limpia.</p>`, true);
+    h += det('txts', `Textos destacados (${p.texts.length})`, `
+      ${p.texts.map((t, i) => `<details data-k="t${i}" ${openState['t' + i] ? 'open' : ''}><summary>${esc(t.text.split('\n')[0].slice(0, 28) || 'Texto')}</summary><div class="in">
+        ${F('Texto', `texts.${i}.text`, { rows: 3 })}
+        <div class="row2">${F('Tamaño (px)', `texts.${i}.size`, { type: 'number', min: 8 })}${F('Ancho (px)', `texts.${i}.w`, { type: 'number', min: 40 })}</div>
+        <div class="row2">${F('X', `texts.${i}.x`, { type: 'number' })}${F('Y', `texts.${i}.y`, { type: 'number' })}</div>
+        <div class="row2">${F('Alineación', `texts.${i}.align`, { opts: [['left', 'Izquierda'], ['center', 'Centro'], ['right', 'Derecha']] })}
+        ${F('Grosor', `texts.${i}.weight`, { opts: [[700, 'Negrita'], [400, 'Normal']], num: true })}</div>
+        ${F('Color', `texts.${i}.color`, { opts: [['navy', 'Azul marino'], ['blue', 'Azul'], ['black', 'Negro'], ['white', 'Blanco'], ['yellow', 'Amarillo'], ['green', 'Verde']] })}
+        ${moveBtns('texts', i, p.texts.length, 'texto')}</div></details>`).join('')}
+      <button class="btn" data-act="add" data-p="texts">＋ Agregar texto</button>`);
+  } else {
+    h += det('hd', 'Encabezado', `
+      ${F('Título', 'title', { rows: 2 })}${F('Subtítulo', 'subtitle')}
+      ${F('Color de acento', 'accent', { opts: ACC })}
+      <p class="hint">Usa [[corchetes]] para color.</p>`, true);
+    h += det('lay', 'Diseño de la página', `
+      ${F('Estilo', 'style', { opts: [['clean', 'Clásico (como el catálogo actual)'], ['lines', 'Con separadores'], ['cards', 'Tarjetas']] })}
+      <div class="row2">${F('Foto: ancho máx. (px)', 'imgW', { type: 'number', min: 60 })}${F('Foto: alto máx. (px)', 'imgH', { type: 'number', min: 60 })}</div>
+      <div class="row2">${F('Espacio entre filas (0 = auto)', 'gapY', { type: 'number', min: 0 })}${F('Alinear si difieren menos de (px)', 'snap', { type: 'number', min: 0 })}</div>
+      <p class="hint">Las medidas siempre van en 2 columnas. Si un lado queda un poco más corto que el otro, se alinean; si la diferencia es grande, cada lado sigue su propio ritmo. Cuando no cabe más, sigue en una hoja nueva.</p>`, true);
+    h += det('its', `Artículos (${p.items.filter(x => x.kind !== 'section').length})`, p.items.map((it, i) => it.kind === 'section'
+      ? det('i' + i, `§ ${esc(it.name)}`, `${F('Título de la sección', `items.${i}.name`)}${F('Subtítulo', `items.${i}.sub`)}${moveBtns('items', i, p.items.length, 'sección')}`)
+      : det('i' + i, `${i + 1}. ${esc(it.name)}${it.sub ? ' · ' + esc(it.sub) : ''}`, `
+      ${F('Nombre', `items.${i}.name`)}${F('Detalle (ej. Vástago fijo)', `items.${i}.sub`)}
+      ${imgField('Foto', `items.${i}.img`)}
+      ${F('Tamaño en la hoja', `items.${i}.span`, { opts: [[1, 'Normal (media hoja)'], [2, 'Ancho completo (listas muy largas)']], num: true })}
+      ${F('Medidas', `items.${i}.items`, { rows: 5 })}${MEAS_HINT}
+      <div class="row2">${F('Unidad al final', `items.${i}.unit`, { ph: '”' })}${F('Espacio “2 ½”', `items.${i}.gap`, { chk: true })}</div>
+      ${F('Viñetas •', `items.${i}.bullets`, { chk: true })}
+      ${moveBtns('items', i, p.items.length, 'artículo')}`, p.items.length === 1)).join('') +
+      `<div class="acts"><button class="btn" data-act="add" data-p="items">＋ Artículo</button><button class="btn" data-act="addSection">＋ Sección (título intermedio)</button></div>`, true);
+  }
+  ed.innerHTML = h;
+  ed.scrollTop = top;
+}
+
+function renderAll() { renderSide(); renderEditor(); renderPreview(); }
+
+/* =========================================================
+   Eventos
+   ========================================================= */
+let pendingUpload = null;
+
+$('editor').addEventListener('input', e => {
+  const t = e.target; if (!t.dataset.p) return;
+  let v = t.type === 'checkbox' ? t.checked : t.value;
+  if (t.dataset.num !== undefined || t.type === 'number') v = v === '' ? 0 : +v;
+  set(page(), t.dataset.p, v);
+  renderPreview(); save();
+  if (/(^title$|\.heading$|\.name$|\.sub$)/.test(t.dataset.p)) renderSide();
+});
+$('editor').addEventListener('change', e => {
+  const t = e.target; if (t.tagName === 'SELECT' && /^(columns|flow|groupsLayout|accent)$/.test(t.dataset.p)) renderEditor();
+});
+$('editor').addEventListener('toggle', e => { if (e.target.dataset && e.target.dataset.k) openState[e.target.dataset.k] = e.target.open; }, true);
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act, p = page(), path = b.dataset.p, i = +b.dataset.i;
+  switch (act) {
+    case 'sel': cur = i; renderAll(); return;
+    case 'addPage': project.pages.splice(cur + 1, 0, b.dataset.t === 'grid' ? newGrid() : newProduct()); cur++; break;
+    case 'dupPage': { const c = clone(p); c.id = uid(); project.pages.splice(cur + 1, 0, c); cur++; break; }
+    case 'delPage':
+      if (project.pages.length === 1 || !confirm('¿Eliminar esta página?')) return;
+      project.pages.splice(cur, 1); cur = Math.max(0, cur - 1); break;
+    case 'pgUp': if (i > 0) { [project.pages[i - 1], project.pages[i]] = [project.pages[i], project.pages[i - 1]]; cur = i - 1; } e.stopPropagation(); break;
+    case 'pgDown': if (i < project.pages.length - 1) { [project.pages[i + 1], project.pages[i]] = [project.pages[i], project.pages[i + 1]]; cur = i + 1; } e.stopPropagation(); break;
+    case 'add': {
+      const arr = get(p, path);
+      arr.push(path === 'groups' ? newGroup() : path === 'texts' ? newText() : newItem());
+      openState[(path === 'groups' ? 'g' : path === 'texts' ? 't' : 'i') + (arr.length - 1)] = true; break;
+    }
+    case 'addSection': p.items.push(newSection()); openState['i' + (p.items.length - 1)] = true; break;
+    case 'del': get(p, path).splice(i, 1); break;
+    case 'dupI': { const arr = get(p, path); arr.splice(i + 1, 0, clone(arr[i])); break; }
+    case 'mv': { const arr = get(p, path), d = +b.dataset.d; [arr[i], arr[i + d]] = [arr[i + d], arr[i]]; break; }
+    case 'upload': pendingUpload = path; $('fileImg').click(); return;
+    case 'addImage': pendingUpload = '__new'; $('fileImg').click(); return;
+    case 'clearImg': set(p, path, ''); break;
+    default: return;
+  }
+  renderAll(); save();
+});
+
+/* ---- Subida / pegado / arrastre de imágenes ---- */
+function loadImage(file, max = 1400) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, max / Math.max(im.width, im.height));
+      const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      let out = c.toDataURL('image/webp', .88);
+      if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/png');
+      res({ src: out, w: im.width, h: im.height });
+    };
+    im.onerror = rej; im.src = url;
+  });
+}
+async function applyImage(path, file) {
+  const { src, w, h } = await loadImage(file), p = page();
+  if (path === '__new') p.images.push(newImage(src));
+  else { set(p, path, src); if (/\.img$/.test(path)) set(p, path.replace(/img$/, 'ar'), +(w / h).toFixed(4)); }
+  renderAll(); save();
+}
+$('fileImg').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (f && pendingUpload) await applyImage(pendingUpload, f);
+  pendingUpload = null;
+});
+$('stage').addEventListener('click', e => {
+  const u = e.target.closest('[data-upload]'); if (!u || e.target.closest('[data-el]')) return;
+  pendingUpload = u.dataset.upload; $('fileImg').click();
+});
+$('stage').addEventListener('dragover', e => { if (e.target.closest('[data-upload]')) e.preventDefault(); });
+$('stage').addEventListener('drop', e => {
+  const u = e.target.closest('[data-upload]'); if (!u) return;
+  e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) applyImage(u.dataset.upload, f);
+});
+
+/* ---- Arrastrar y redimensionar elementos en la página ---- */
+$('stage').addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-el]'); if (!el) return;
+  e.preventDefault();
+  const obj = get(page(), el.dataset.el), resize = !!e.target.closest('[data-resize]');
+  const sx = e.clientX, sy = e.clientY, ox = obj.x, oy = obj.y, ow = obj.w;
+  el.setPointerCapture(e.pointerId);
+  const mv = ev => {
+    const dx = (ev.clientX - sx) / scale, dy = (ev.clientY - sy) / scale;
+    if (resize) { obj.w = Math.max(30, Math.round(ow + dx)); el.style.width = obj.w + 'px'; }
+    else { obj.x = Math.round(ox + dx); obj.y = Math.round(oy + dy); el.style.left = obj.x + 'px'; el.style.top = obj.y + 'px'; }
+  };
+  const up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); renderEditor(); save(); };
+  el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up);
+});
+
+/* ---- Barra superior ---- */
+$('bPdf').onclick = () => { fillPrint(); setTimeout(() => window.print(), 150); };
+function fillPrint() { $('print').innerHTML = project.pages.flatMap(p => pageSheets(p, false)).join(''); }
+window.addEventListener('beforeprint', fillPrint);
+$('bNew').onclick = () => {
+  if (!confirm('¿Empezar un catálogo nuevo? Se borra lo actual (guarda antes tu archivo si lo necesitas).')) return;
+  project = { pages: [newProduct()] }; cur = 0; renderAll(); save();
+};
+$('bSave').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(project)], { type: 'application/json' }));
+  a.download = 'catalogo-drenhisa.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('bOpen').onclick = () => $('fileJson').click();
+$('fileJson').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.pages)) throw 0; project = d; cur = 0; renderAll(); save(); }
+  catch { alert('Ese archivo no es un catálogo válido.'); }
+});
+window.addEventListener('resize', renderPreview);
+
+/* ---- Inicio ---- */
+(async () => {
+  await idb.open();
+  const saved = await idb.get('project');
+  if (saved) { try { const d = JSON.parse(saved); if (d.pages && d.pages.length) project = d; } catch {} }
+  renderAll();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderPreview);
+})();
+</script>
+</body>
+</html>
