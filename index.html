@@ -17,7 +17,7 @@ body{font-family:Inter,system-ui,sans-serif;background:var(--ui-bg);color:var(--
 button,input,select,textarea{font:inherit;color:inherit}
 
 /* ---------- App shell ---------- */
-#app{display:grid;grid-template-columns:230px 370px 1fr;grid-template-rows:48px 1fr;height:100vh}
+#app{display:grid;grid-template-columns:270px 360px 1fr;grid-template-rows:48px 1fr;height:100vh}
 #top{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--blue);color:#fff}
 #top h1{font-size:15px;margin:0 auto 0 0;font-weight:600;letter-spacing:.2px}
 #top .st{font-size:12px;opacity:.8;margin-right:6px}
@@ -33,12 +33,14 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 #side{background:var(--ui-panel);border-right:1px solid var(--ui-line);overflow:auto;padding:10px}
 #side .add{display:grid;gap:6px;margin-bottom:12px}
-.pg{display:flex;align-items:center;gap:6px;padding:7px 8px;border:1px solid var(--ui-line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#fff}
+.pg{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:start;padding:7px 8px;border:1px solid var(--ui-line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:#fff}
 .pg.sel{border-color:var(--ui-accent);box-shadow:0 0 0 2px rgba(35,82,150,.15);background:#f4f8ff}
-.pg .n{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:11px;flex:none}
-.pg .t{flex:1;min-width:0}
-.pg .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pg .t small{color:var(--ui-mute)}
+.pg .th{width:98px;height:127px;overflow:hidden;position:relative;border:1px solid var(--ui-line);background:#fff;pointer-events:none}
+.pg .th .page{position:absolute;left:0;top:0;transform:scale(.12);transform-origin:0 0;box-shadow:none}
+.pg .n{display:inline-grid;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;place-items:center;font-size:11px;margin-bottom:3px}
+.pg .t{min-width:0}
+.pg .t b{display:block;font-weight:600;line-height:1.25;max-height:3.75em;overflow:hidden;font-size:12px}
+.pg .t small{color:var(--ui-mute);display:block;margin-top:2px}
 .pg .ctl{display:flex;flex-direction:column;gap:2px}
 .pg .ctl button{border:0;background:none;cursor:pointer;padding:0 3px;color:var(--ui-mute);font-size:11px;line-height:1}
 .pg .ctl button:hover{color:var(--ui-text)}
@@ -137,7 +139,56 @@ details details{background:#fafbfd}
 .page.s-cards .it .nm{background:var(--blue);color:#fff;border-radius:8px;padding:5px 10px;margin-bottom:8px}
 .page.s-cards .it .ns{margin:-3px 0 6px}
 .page.s-cards .it .rule{display:none}
+.rh2{display:none}
+.edit .page .it .im{position:relative}
+.edit .page .it .rh2{display:block;position:absolute;right:-6px;bottom:-6px;width:14px;height:14px;border-radius:3px;background:var(--ui-accent);cursor:nwse-resize;z-index:3}
 .page .it .im.ph{border:1.5px dashed #b9c0cf;border-radius:8px;color:#8b93a6;font-size:11px;text-align:center;background:#fafbfd}
+
+/* portada / contraportada */
+.page .cv{position:absolute;inset:0;color:#fff;font-family:Poppins,sans-serif;text-align:center}
+.page .cv.dk{color:var(--navy)}
+.page .cv .ac-yellow{color:var(--yellow)}
+.page .cv.dk .ac-yellow{color:var(--blue)}
+.page .cv-tab{position:absolute;left:615px;top:0;width:119px;height:209px;background:var(--yellow);border-radius:0 0 60px 60px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:48px}
+.page .cv-tab img{height:60px;width:auto;max-width:90px;object-fit:contain}
+.page .cv-badge{position:absolute;left:50%;top:346px;transform:translateX(-50%);background:var(--yellow);color:#fff;border-radius:42px;padding:0 34px;height:82px;line-height:82px;font-weight:700;font-size:40px;letter-spacing:-1px;white-space:nowrap}
+.page .cv-title{position:absolute;left:0;right:0;top:462px;margin:0;padding:0 24px;font-weight:700;font-size:56px;line-height:1.08;letter-spacing:-2.2px}
+.page .cv-foot{position:absolute;left:0;right:0;top:822px}
+.page .cv-foot svg{display:block;margin:0 auto 22px}
+.page .cv-phone{font-weight:600;font-size:28px;color:var(--yellow);line-height:1.5}
+.page .cv.dk .cv-phone{color:var(--blue)}
+.page .cv-web{font-weight:600;font-size:26px;text-decoration:underline;line-height:1.6}
+.page .bk-tint{position:absolute;inset:0;background:#000}
+.page .bk-logo{position:absolute;left:58px;top:132px;width:300px;height:auto}
+.page .bk-cap{position:absolute;left:0;right:0;top:704px;font-style:italic;font-weight:700;font-size:28px;letter-spacing:-.5px}
+.page .bk-qrs{position:absolute;left:0;right:0;top:782px;display:flex;justify-content:center;gap:46px}
+.page .bk-q{width:176px}
+.page .bk-q .qi{width:176px;height:176px;display:grid;place-items:center}
+.page .bk-q .qi img{width:100%;height:100%;object-fit:contain;display:block}
+.page .bk-q .ql{font-size:26px;font-weight:400;margin-top:8px;letter-spacing:.3px}
+
+/* biblioteca */
+#lib{position:fixed;inset:0;background:rgba(20,28,46,.55);z-index:50;display:grid;place-items:center;padding:20px}
+#lib[hidden]{display:none}
+.libbox{background:var(--ui-panel);border-radius:12px;width:min(1020px,100%);max-height:100%;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.libhd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--ui-line);flex-wrap:wrap}
+.libhd b{font-size:15px;margin-right:auto}
+.libhd input{border:1px solid var(--ui-line);border-radius:6px;padding:6px 9px;min-width:220px}
+#libGrid{padding:14px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;flex:1;min-height:240px;align-content:start}
+#libGrid.dragging{outline:3px dashed var(--ui-accent);outline-offset:-8px}
+.lc{border:1px solid var(--ui-line);border-radius:9px;padding:8px;display:grid;gap:6px;background:#fff}
+.lc .lth{height:130px;border-radius:6px;background:#fff center/contain no-repeat;border:1px solid var(--ui-line)}
+.lc .lth[data-act]{cursor:pointer}
+.lc input{width:100%;border:1px solid var(--ui-line);border-radius:5px;padding:4px 6px;font-size:12px}
+.lc .lf{display:flex;align-items:center;gap:6px}
+.lc .lf small{margin-right:auto;color:var(--ui-mute)}
+#libGrid .empty{grid-column:1/-1;text-align:center;color:var(--ui-mute);padding:50px 10px}
+.libft{padding:9px 14px;border-top:1px solid var(--ui-line);color:var(--ui-mute);font-size:12px}
+/* vista general */
+.ov{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:flex-start}
+.ovc{cursor:pointer;text-align:center;font-size:12px;color:var(--ui-mute)}
+.ovc .sizer{margin:0 0 6px}
+.ovc.sel .sizer{outline:3px solid var(--ui-accent)}
 
 /* ---------- Print ---------- */
 #print{display:none}
@@ -148,7 +199,7 @@ details details{background:#fafbfd}
   #print{display:block}
   #print .page{box-shadow:none;margin:0;page-break-after:always;break-after:page;transform:none}
 }
-@media (max-width:1100px){#app{grid-template-columns:180px 320px 1fr}}
+@media (max-width:1100px){#app{grid-template-columns:200px 320px 1fr}.pg .th{display:none}}
 </style>
 </head>
 <body>
@@ -156,6 +207,8 @@ details details{background:#fafbfd}
   <div id="top">
     <h1>📘 Diseñador de Catálogo · DRENHISA</h1>
     <span class="st" id="status"></span>
+    <button class="btn" id="bLib">🖼 Imágenes</button>
+    <button class="btn" id="bOv">Vista general</button>
     <button class="btn" id="bNew">Nuevo</button>
     <button class="btn" id="bOpen">Abrir…</button>
     <button class="btn" id="bSave">Guardar archivo</button>
@@ -166,7 +219,15 @@ details details{background:#fafbfd}
   <main id="stage"></main>
 </div>
 <div id="print"></div>
-<input type="file" id="fileImg" accept="image/*" hidden>
+<div id="lib" hidden><div class="libbox">
+  <div class="libhd"><b id="libTitle">Biblioteca de imágenes</b>
+    <input id="libQ" type="text" placeholder="Buscar por nombre o etiqueta">
+    <button class="btn pri" data-act="libUpload">＋ Importar imágenes</button>
+    <button class="btn" data-act="libClose">Cerrar</button></div>
+  <div id="libGrid"></div>
+  <div class="libft">Importa varias fotos a la vez (o arrástralas aquí). Ponles nombre y etiquetas para encontrarlas rápido. Cada foto se importa una sola vez y se reutiliza en todo el catálogo.</div>
+</div></div>
+<input type="file" id="fileLib" accept="image/*" multiple hidden>
 <input type="file" id="fileJson" accept=".json,application/json" hidden>
 
 <script>
@@ -229,14 +290,17 @@ const newProduct = () => ({
 const newGroup = () => ({ heading: '', items: '', style: 'list', cols: 0, max: 8, unit: '”', gap: false, bullets: true, w: 0 });
 const newImage = src => ({ src, x: 40, y: 700, w: 400 });
 const newText = () => ({ text: 'TEXTO DESTACADO', x: 440, y: 800, w: 330, size: 32, align: 'center', color: 'navy', weight: 700 });
+const newCover = () => ({ id: uid(), type: 'cover', badge: 'CATÁLOGO', title: 'Material para Obra\n[[Hidráulica]] y Sistemas de\n[[Drenaje Sanitario]]', phone: '951 525 6059', web: 'www.drenhisa.com', logo: '', bg: '#235296', bgImg: '' });
+const newBack = () => ({ id: uid(), type: 'back', caption: 'NUESTRA UBICACIÓN', bg: '#1b2a4a', bgImg: '', tint: 25, logo: '', qrs: [{ img: '', label: 'TIENDA' }, { img: '', label: 'ALMACÉN' }] });
+const newQr = () => ({ img: '', label: 'ETIQUETA' });
 const newGrid = () => ({
   id: uid(), type: 'grid', title: 'Título de la página', subtitle: '', accent: 'blue',
   style: 'clean', gapY: 0, snap: 60, imgW: 128, imgH: 150, items: [newItem()]
 });
-const newItem = () => ({ kind: 'item', name: 'Nombre del artículo', sub: '', img: '', ar: 1, span: 1, items: '', unit: '”', gap: true, bullets: true });
+const newItem = () => ({ kind: 'item', name: 'Nombre del artículo', sub: '', img: '', ar: 1, imgS: 100, span: 1, items: '', unit: '”', gap: true, bullets: true });
 const newSection = () => ({ kind: 'section', name: 'Título de la sección', sub: '' });
 
-const SAMPLE = () => ({ pages: [
+const SAMPLE = () => ({ library: [], pages: [
   { id: uid(), type: 'product', accent: 'blue',
     title: 'Tubería de Polietileno de Alta Densidad para conducción de [[Agua Potable]]',
     subtitle: 'PE 4710', logo: '', logoH: 56,
@@ -273,6 +337,11 @@ const SAMPLE = () => ({ pages: [
    Estado + persistencia (IndexedDB, para guardar fotos sin límite)
    ========================================================= */
 let project = SAMPLE();
+let view = 'one';
+const lib = () => project.library || (project.library = []);
+const libById = id => lib().find(x => x.id === id);
+const imgSrc = v => !v ? '' : String(v).startsWith('lib:') ? ((libById(v.slice(4)) || {}).src || '') : v;
+const imgAr = (v, fb) => (v && String(v).startsWith('lib:') && libById(v.slice(4))) ? libById(v.slice(4)).ar : (fb > 0 ? fb : 1);
 let cur = 0;
 let scale = 1;
 
@@ -296,10 +365,12 @@ function save() {
   clearTimeout(saveTimer);
   $('status').textContent = 'Guardando…';
   saveTimer = setTimeout(async () => {
-    const ok = await idb.put('project', JSON.stringify(project));
+    const ok = await idb.put('project', JSON.stringify({ pages: project.pages }));
     $('status').textContent = ok ? 'Guardado en este navegador ✓' : 'No se pudo autoguardar (usa “Guardar archivo”)';
   }, 400);
 }
+let libTimer;
+function saveLib() { clearTimeout(libTimer); libTimer = setTimeout(() => idb.put('library', JSON.stringify(lib())), 400); }
 const $ = id => document.getElementById(id);
 const page = () => project.pages[cur];
 
@@ -341,7 +412,7 @@ function productHTML(p, edit) {
   const cols = rows.reduce((m, r) => Math.max(m, r.length - 1), 0);
   let html = `<div class="pad flow">`;
   html += `<div class="hd"><div><h1>${rt(p.title, p.accent)}</h1>${p.subtitle ? `<div class="sub">${esc(p.subtitle)}</div>` : ''}</div>`;
-  if (p.logo) html += `<img class="logo" src="${p.logo}" style="height:${p.logoH || 56}px">`;
+  if (imgSrc(p.logo)) html += `<img class="logo" src="${imgSrc(p.logo)}" style="height:${p.logoH || 56}px">`;
   html += `</div>`;
   if (p.desc.trim()) html += `<div class="desc">${p.desc.split('\n').map(l => `<p>${rt(l, p.accent)}</p>`).join('')}</div>`;
   if (usos.length) html += `<div class="usos"><b>USOS:</b>${usos.map(u => `<div class="u">${esc(u)}</div>`).join('')}</div>`;
@@ -357,7 +428,7 @@ function productHTML(p, edit) {
   }
   html += `</div>`;
   p.images.forEach((im, i) => {
-    html += `<div class="el" ${edit ? `data-el="images.${i}"` : ''} style="left:${im.x}px;top:${im.y}px;width:${im.w}px"><img src="${im.src}" draggable="false">${edit ? '<div class="rh" data-resize></div>' : ''}</div>`;
+    html += `<div class="el" ${edit ? `data-el="images.${i}"` : ''} style="left:${im.x}px;top:${im.y}px;width:${im.w}px"><img src="${imgSrc(im.src)}" draggable="false">${edit ? '<div class="rh" data-resize></div>' : ''}</div>`;
   });
   const COL = { navy: 'var(--navy)', blue: 'var(--blue)', black: '#111', white: '#fff', yellow: 'var(--yellow)', green: 'var(--green)' };
   p.texts.forEach((t, i) => {
@@ -383,9 +454,9 @@ function measureEl(style) {
   _meas.className = 'page s-' + style;
   return _meas;
 }
-function imgSize(it, p, iw) {
-  const ar = it.ar > 0 ? it.ar : 1, maxH = p.imgH || 150;
-  let w = iw, h = w / ar;
+function imgSize(it, p, iw, maxW) {
+  const ar = imgAr(it.img, it.ar), k = (it.imgS > 0 ? it.imgS : 100) / 100, maxH = (p.imgH || 150) * k;
+  let w = Math.min(iw * k, maxW || 1e9), h = w / ar;
   if (h > maxH) { h = maxH; w = h * ar; }
   return { w: Math.round(w), h: Math.round(h) };
 }
@@ -409,9 +480,12 @@ function itemHTML(it, p, o) {
   const cards = p.style === 'cards';
   const iw = (p.imgW || 128) - (cards ? 16 : 0);
   const up = o.edit ? `data-upload="items.${o.i}.img"` : '';
+  const rh = o.edit ? `<div class="rh2" data-imgresize="${o.i}" title="Arrastra para agrandar o achicar la foto"></div>` : '';
+  const maxW = o.w - (cards ? 30 : 0) - 14 - (o.wide ? 300 : 150);         // deja espacio para las medidas
+  const k = (it.imgS > 0 ? it.imgS : 100) / 100;
   let im;
-  if (it.img) { const z = imgSize(it, p, iw); im = `<div class="im" ${up} style="width:${iw}px;height:${z.h}px"><img src="${it.img}" style="width:${z.w}px;height:${z.h}px" draggable="false"></div>`; }
-  else if (o.edit) im = `<div class="im ph" ${up} style="width:${iw}px;height:${Math.min(100, p.imgH || 150)}px">＋ foto</div>`;
+  if (imgSrc(it.img)) { const z = imgSize(it, p, iw, maxW); im = `<div class="im" ${up} style="width:${Math.max(iw, z.w)}px;height:${z.h}px"><img src="${imgSrc(it.img)}" style="width:${z.w}px;height:${z.h}px" draggable="false">${rh}</div>`; }
+  else if (o.edit) { const w = Math.max(iw, Math.min(iw * k, maxW)); im = `<div class="im ph" ${up} style="width:${Math.round(w)}px;height:${Math.round(Math.min(100, p.imgH || 150) * k)}px">＋ foto${rh}</div>`; }
   else im = `<div class="im" style="width:${iw}px"></div>`;
 
   const list = parseMeasures(it.items, it.unit, it.gap);
@@ -480,18 +554,55 @@ function gridSheets(p, edit) {
   return sheets.map(list => `<div class="page s-${st}" style="--gy:${gy}px">${headerHTML(p)}${list.map(o => itemHTML(o.it, p, { i: o.i, wide: o.wide, w: o.w, x: o.x, y: o.y, edit, last: o.last })).join('')}</div>`);
 }
 
-const pageSheets = (p, edit) => p.type === 'product' ? [`<div class="page">${productHTML(p, edit)}</div>`] : gridSheets(p, edit);
+function coverHTML(p) {
+  const bg = imgSrc(p.bgImg) ? `background:url(${imgSrc(p.bgImg)}) center/cover` : `background:${p.bg || '#235296'}`;
+  const dk = !imgSrc(p.bgImg) && ['#ffffff', '#fdc913'].includes((p.bg || '').toLowerCase());
+  return `<div class="cv ${dk ? 'dk' : ''}" style="${bg}">
+    ${imgSrc(p.logo) ? `<div class="cv-tab"><img src="${imgSrc(p.logo)}"></div>` : `<div class="cv-tab"></div>`}
+    ${p.badge ? `<div class="cv-badge">${esc(p.badge)}</div>` : ''}
+    <h1 class="cv-title">${rt(p.title, 'yellow')}</h1>
+    <div class="cv-foot"><svg width="34" height="22" viewBox="0 0 34 22" fill="none"><path d="M4 4l13 13L30 4" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ${p.phone ? `<div class="cv-phone">${esc(p.phone)}</div>` : ''}${p.web ? `<div class="cv-web">${esc(p.web)}</div>` : ''}</div></div>`;
+}
+function backHTML(p, edit) {
+  const bg = imgSrc(p.bgImg) ? `background:url(${imgSrc(p.bgImg)}) center/cover` : `background:${p.bg || '#1b2a4a'}`;
+  const qrs = (p.qrs || []).map((q, i) => {
+    const has = imgSrc(q.img);
+    const box = has ? `<img src="${imgSrc(q.img)}">` : (edit ? '<div class="im ph" style="width:100%;height:100%;display:grid;place-items:center;color:#cfd6e4;border-color:#8a96b0;background:rgba(255,255,255,.08)">＋ QR</div>' : '');
+    return `<div class="bk-q"><div class="qi" ${edit ? `data-upload="qrs.${i}.img"` : ''}>${box}</div>${q.label ? `<div class="ql">${esc(q.label)}</div>` : ''}</div>`;
+  }).join('');
+  return `<div class="cv" style="${bg}">${imgSrc(p.bgImg) && p.tint > 0 ? `<div class="bk-tint" style="opacity:${p.tint / 100}"></div>` : ''}
+    ${imgSrc(p.logo) ? `<img class="bk-logo" src="${imgSrc(p.logo)}">` : ''}
+    ${p.caption ? `<div class="bk-cap">${rt(p.caption, 'yellow')}</div>` : ''}<div class="bk-qrs">${qrs}</div></div>`;
+}
+const pageSheets = (p, edit) =>
+  p.type === 'product' ? [`<div class="page">${productHTML(p, edit)}</div>`]
+  : p.type === 'cover' ? [`<div class="page">${coverHTML(p)}</div>`]
+  : p.type === 'back' ? [`<div class="page">${backHTML(p, edit)}</div>`]
+  : gridSheets(p, edit);
+const TYPE_NAME = { cover: 'Portada', product: 'Producto', grid: 'Varios artículos', back: 'Contraportada' };
 
 /* =========================================================
    Vista previa
    ========================================================= */
 function renderPreview() {
   const st = $('stage');
+  if (view === 'all') {
+    const sc = .3;
+    let h = '';
+    project.pages.forEach((p, i) => pageSheets(p, false).forEach((sh, j) => {
+      h += `<div class="ovc ${i === cur ? 'sel' : ''}" data-act="ovSel" data-i="${i}"><div class="sizer" style="width:${PW * sc}px;height:${PH * sc}px">${sh}</div>Pág. ${i + 1}${j ? ` (hoja ${j + 1})` : ''}</div>`;
+    }));
+    st.classList.remove('edit');
+    st.innerHTML = `<div id="stagehint">Vista general del catálogo · clic en una página para editarla</div><div class="ov">${h}</div>`;
+    st.querySelectorAll('.ov .page').forEach(pg => { pg.style.transform = `scale(${sc})`; });
+    return;
+  }
   const fit = Math.min((st.clientWidth - 36) / PW, (st.clientHeight - 70) / PH);
   scale = Math.max(.3, Math.min(fit, 1.4));
   st.classList.add('edit');
   const p = page(), sheets = pageSheets(p, true);
-  const hint = p.type === 'product' ? 'Arrastra fotos/textos en la página · esquina azul = cambiar tamaño' : 'Clic o arrastra una imagen sobre cada “＋ foto” · las hojas se agregan solas';
+  const hint = p.type === 'product' ? 'Arrastra fotos/textos en la página · esquina azul = cambiar tamaño' : (p.type === 'grid' ? 'Clic en cada “＋ foto” para elegir de la biblioteca · las hojas se agregan solas' : 'Vista previa de la página');
   st.innerHTML = (sheets.length > 1 ? `<div class="warn info">Este conjunto ocupa ${sheets.length} hojas: se reparte solo.</div>` : '') +
     `<div id="stagehint">${hint}</div>` +
     sheets.map(h => `<div class="sizer" style="width:${PW * scale}px;height:${PH * scale}px">${h}</div>`).join('');
@@ -506,12 +617,15 @@ function renderSide() {
     <div class="add">
       <button class="btn pri" data-act="addPage" data-t="product">＋ Página de producto</button>
       <button class="btn pri" data-act="addPage" data-t="grid">＋ Página con varios artículos</button>
-    </div>` + project.pages.map((p, i) => `
-    <div class="pg ${i === cur ? 'sel' : ''}" data-act="sel" data-i="${i}">
-      <span class="n">${i + 1}</span>
-      <span class="t"><b>${esc((p.title || '').replace(/\[\[|\]\]/g, '') || 'Sin título')}</b><small>${p.type === 'product' ? 'Producto' : 'Varios artículos (' + p.items.filter(x => x.kind !== 'section').length + ')'}</small></span>
+    </div>` + project.pages.map((p, i) => {
+      const nm = (p.type === 'back' ? p.caption : p.title) || '';
+      const th = pageSheets(p, false)[0];
+      return `<div class="pg ${i === cur ? 'sel' : ''}" data-act="sel" data-i="${i}">
+      <div class="th">${th}</div>
+      <span class="t"><span class="n">${i + 1}</span><b>${esc(nm.replace(/\[\[|\]\]|\*\*/g, '').replace(/\n/g, ' ') || 'Sin título')}</b><small>${TYPE_NAME[p.type] || ''}${p.type === 'grid' ? ' · ' + p.items.filter(x => x.kind !== 'section').length : ''}</small></span>
       <span class="ctl"><button data-act="pgUp" data-i="${i}" title="Subir">▲</button><button data-act="pgDown" data-i="${i}" title="Bajar">▼</button></span>
-    </div>`).join('') + `
+    </div>`;
+    }).join('') + `
     <div class="acts" style="margin-top:10px">
       <button class="btn sm" data-act="dupPage">Duplicar</button>
       <button class="btn sm danger" data-act="delPage">Eliminar</button>
@@ -529,14 +643,15 @@ function F(label, path, o = {}) {
   let inner;
   if (o.opts) inner = `<select ${a} ${o.num ? 'data-num' : ''}>${o.opts.map(([k, t]) => `<option value="${k}" ${String(v) === String(k) ? 'selected' : ''}>${t}</option>`).join('')}</select>`;
   else if (o.rows) inner = `<textarea ${a} rows="${o.rows}" placeholder="${esc(o.ph || '')}">${esc(v)}</textarea>`;
+  else if (o.type === 'range') inner = `<input type="range" ${a} data-num min="${o.min}" max="${o.max}" step="5" value="${v > 0 ? v : 100}"><small class="hint">${v > 0 ? v : 100} %</small>`;
   else if (o.type === 'number') inner = `<input type="number" ${a} data-num value="${esc(v)}" ${o.min != null ? `min="${o.min}"` : ''} ${o.max != null ? `max="${o.max}"` : ''}>`;
   else inner = `<input type="text" ${a} value="${esc(v)}" placeholder="${esc(o.ph || '')}">`;
   return `<label class="f"><span>${label}</span>${inner}</label>`;
 }
 function imgField(label, path) {
-  const v = get(page(), path);
-  return `<div class="f"><span>${label}</span><div class="imgf"><div class="th" style="${v ? `background-image:url(${v})` : ''}"></div>
-    <button class="btn sm" data-act="upload" data-p="${path}">${v ? 'Cambiar' : 'Subir'}</button>${v ? `<button class="btn sm" data-act="clearImg" data-p="${path}">Quitar</button>` : ''}</div></div>`;
+  const v = get(page(), path), src = imgSrc(v);
+  return `<div class="f"><span>${label}</span><div class="imgf"><div class="th" style="${src ? `background-image:url(${src})` : ''}"></div>
+    <button class="btn sm" data-act="pick" data-p="${path}">${src ? 'Cambiar' : 'Elegir de la biblioteca'}</button>${src ? `<button class="btn sm" data-act="clearImg" data-p="${path}">Quitar</button>` : ''}</div></div>`;
 }
 const MEAS_HINT = '<p class="hint">Una medida por línea o separadas por coma. Escribe <b>1/2</b> o <b>2 1/2</b> y se convierte a ½” y 2½”. Con valor: <b>1 | 50mts y 100mts</b></p>';
 
@@ -561,15 +676,34 @@ function det(key, title, body, def = false) {
 
 function renderEditor() {
   const p = page(), ed = $('editor'), top = ed.scrollTop;
-  let h = `<h2>Página ${cur + 1} · ${p.type === 'product' ? 'Producto completo' : 'Varios artículos'}</h2>`;
-  if (p.type === 'product') {
+  let h = `<h2>Página ${cur + 1} · ${TYPE_NAME[p.type] || ''}</h2>`;
+  if (p.type === 'cover') {
+    h += det('cv', 'Portada', `
+      ${F('Insignia (ej. CATÁLOGO)', 'badge')}
+      ${F('Título', 'title', { rows: 4 })}
+      <p class="hint">Una línea por renglón. Las [[palabras entre corchetes]] salen en color de acento.</p>
+      ${F('Teléfono / WhatsApp', 'phone')}${F('Sitio web', 'web')}
+      ${imgField('Logo (pestaña amarilla)', 'logo')}
+      ${F('Color de fondo', 'bg', { opts: [['#235296', 'Azul DRENHISA'], ['#1b2a4a', 'Azul marino'], ['#fdc913', 'Amarillo'], ['#ffffff', 'Blanco']] })}
+      ${imgField('Foto de fondo (opcional)', 'bgImg')}`, true);
+  } else if (p.type === 'back') {
+    h += det('bk', 'Contraportada', `
+      ${imgField('Foto de fondo', 'bgImg')}
+      ${F('Oscurecer la foto (%)', 'tint', { type: 'number', min: 0, max: 90 })}
+      ${F('Color de fondo (si no hay foto)', 'bg', { opts: [['#1b2a4a', 'Azul marino'], ['#235296', 'Azul DRENHISA'], ['#ffffff', 'Blanco']] })}
+      ${imgField('Logo', 'logo')}
+      ${F('Texto sobre los QR', 'caption')}`, true);
+    h += det('qr', `Códigos QR (${p.qrs.length})`, p.qrs.map((q, i) => det('q' + i, esc(q.label || 'QR ' + (i + 1)), `
+      ${imgField('Imagen del QR', `qrs.${i}.img`)}${F('Etiqueta', `qrs.${i}.label`)}
+      ${moveBtns('qrs', i, p.qrs.length, 'QR')}`, true)).join('') + `<button class="btn" data-act="add" data-p="qrs">＋ Agregar QR</button>`, true);
+  } else if (p.type === 'product') {
     h += det('hd', 'Encabezado', `
       ${F('Título', 'title', { rows: 2 })}
       <p class="hint">Rodea con [[dobles corchetes]] las palabras que van en color. **Negritas** también funciona.</p>
       ${F('Subtítulo / marca', 'subtitle')}
       ${F('Color de acento', 'accent', { opts: ACC })}
       ${imgField('Logo (arriba a la derecha)', 'logo')}
-      ${p.logo ? F('Alto del logo (px)', 'logoH', { type: 'number', min: 20 }) : ''}`, true);
+      ${imgSrc(p.logo) ? F('Alto del logo (px)', 'logoH', { type: 'number', min: 20 }) : ''}`, true);
     h += det('desc', 'Descripción', `${F('Texto (cada línea = un párrafo)', 'desc', { rows: 6 })}`, true);
     h += det('usos', 'Usos', `${F('Un uso por línea', 'usos', { rows: 5 })}`);
     h += det('tbl', 'Tabla (calibres, presiones…)', `
@@ -587,11 +721,11 @@ function renderEditor() {
         ${moveBtns('groups', i, p.groups.length, 'grupo')}`, p.groups.length === 1)).join('')}
       <button class="btn" data-act="add" data-p="groups">＋ Agregar lista de medidas</button>`);
     h += det('imgs', `Imágenes (${p.images.length})`, `
-      ${p.images.map((im, i) => `<div class="f"><span>Imagen ${i + 1}</span><div class="imgf"><div class="th" style="background-image:url(${im.src})"></div>
-        <button class="btn sm" data-act="upload" data-p="images.${i}.src">Cambiar</button><button class="btn sm danger" data-act="del" data-p="images" data-i="${i}">Quitar</button></div>
+      ${p.images.map((im, i) => `<div class="f"><span>Imagen ${i + 1}</span><div class="imgf"><div class="th" style="background-image:url(${imgSrc(im.src)})"></div>
+        <button class="btn sm" data-act="pick" data-p="images.${i}.src">Cambiar</button><button class="btn sm danger" data-act="del" data-p="images" data-i="${i}">Quitar</button></div>
         <div class="row2">${F('X', `images.${i}.x`, { type: 'number' })}${F('Y', `images.${i}.y`, { type: 'number' })}</div>
         ${F('Ancho (px)', `images.${i}.w`, { type: 'number', min: 30 })}</div>`).join('')}
-      <button class="btn" data-act="addImage">＋ Agregar imagen</button>
+      <button class="btn" data-act="pick" data-p="__new">＋ Agregar imagen (de la biblioteca)</button>
       <p class="hint">Después arrástrala directo sobre la página. Usa PNG sin fondo para que se vea limpia.</p>`, true);
     h += det('txts', `Textos destacados (${p.texts.length})`, `
       ${p.texts.map((t, i) => `<details data-k="t${i}" ${openState['t' + i] ? 'open' : ''}><summary>${esc(t.text.split('\n')[0].slice(0, 28) || 'Texto')}</summary><div class="in">
@@ -618,6 +752,8 @@ function renderEditor() {
       : det('i' + i, `${i + 1}. ${esc(it.name)}${it.sub ? ' · ' + esc(it.sub) : ''}`, `
       ${F('Nombre', `items.${i}.name`)}${F('Detalle (ej. Vástago fijo)', `items.${i}.sub`)}
       ${imgField('Foto', `items.${i}.img`)}
+      ${F('Tamaño de la foto (%)', `items.${i}.imgS`, { type: 'range', min: 40, max: 300 })}
+      <p class="hint">También puedes arrastrar el cuadrito azul de la esquina de la foto, en la página. Para una foto todavía más grande, usa “Ancho completo” abajo.</p>
       ${F('Tamaño en la hoja', `items.${i}.span`, { opts: [[1, 'Normal (media hoja)'], [2, 'Ancho completo (listas muy largas)']], num: true })}
       ${F('Medidas', `items.${i}.items`, { rows: 5 })}${MEAS_HINT}
       <div class="row2">${F('Unidad al final', `items.${i}.unit`, { ph: '”' })}${F('Espacio “2 ½”', `items.${i}.gap`, { chk: true })}</div>
@@ -654,7 +790,7 @@ document.addEventListener('click', async e => {
   const act = b.dataset.act, p = page(), path = b.dataset.p, i = +b.dataset.i;
   switch (act) {
     case 'sel': cur = i; renderAll(); return;
-    case 'addPage': project.pages.splice(cur + 1, 0, b.dataset.t === 'grid' ? newGrid() : newProduct()); cur++; break;
+    case 'addPage': project.pages.splice(cur + 1, 0, ({ grid: newGrid, cover: newCover, back: newBack }[b.dataset.t] || newProduct)()); cur++; break;
     case 'dupPage': { const c = clone(p); c.id = uid(); project.pages.splice(cur + 1, 0, c); cur++; break; }
     case 'delPage':
       if (project.pages.length === 1 || !confirm('¿Eliminar esta página?')) return;
@@ -663,22 +799,32 @@ document.addEventListener('click', async e => {
     case 'pgDown': if (i < project.pages.length - 1) { [project.pages[i + 1], project.pages[i]] = [project.pages[i], project.pages[i + 1]]; cur = i + 1; } e.stopPropagation(); break;
     case 'add': {
       const arr = get(p, path);
-      arr.push(path === 'groups' ? newGroup() : path === 'texts' ? newText() : newItem());
-      openState[(path === 'groups' ? 'g' : path === 'texts' ? 't' : 'i') + (arr.length - 1)] = true; break;
+      arr.push(path === 'groups' ? newGroup() : path === 'texts' ? newText() : path === 'qrs' ? newQr() : newItem());
+      openState[(path === 'groups' ? 'g' : path === 'texts' ? 't' : path === 'qrs' ? 'q' : 'i') + (arr.length - 1)] = true; break;
     }
     case 'addSection': p.items.push(newSection()); openState['i' + (p.items.length - 1)] = true; break;
     case 'del': get(p, path).splice(i, 1); break;
     case 'dupI': { const arr = get(p, path); arr.splice(i + 1, 0, clone(arr[i])); break; }
     case 'mv': { const arr = get(p, path), d = +b.dataset.d; [arr[i], arr[i + d]] = [arr[i + d], arr[i]]; break; }
-    case 'upload': pendingUpload = path; $('fileImg').click(); return;
-    case 'addImage': pendingUpload = '__new'; $('fileImg').click(); return;
+    case 'pick': openLib(path); return;
+    case 'libUpload': $('fileLib').click(); return;
+    case 'libClose': closeLib(); return;
+    case 'libPick': pickInto(libMode && libMode.path, b.dataset.id); closeLib(); return;
+    case 'libDel': {
+      const n = libUse(b.dataset.id);
+      if (n && !confirm(`Esta imagen se usa ${n} vez/veces en el catálogo. Si la eliminas, esas páginas quedarán sin foto. ¿Eliminar?`)) return;
+      project.library = lib().filter(x => x.id !== b.dataset.id); saveLib(); renderLib(); renderAll(); return;
+    }
+    case 'ovSel': cur = i; view = 'one'; $('bOv').textContent = 'Vista general'; break;
     case 'clearImg': set(p, path, ''); break;
     default: return;
   }
   renderAll(); save();
 });
 
-/* ---- Subida / pegado / arrastre de imágenes ---- */
+/* ---- Biblioteca de imágenes ---- */
+let libMode = null;                     // null = administrar · {path} = elegir para ese campo
+const libUse = id => JSON.stringify(project.pages).split('lib:' + id).length - 1;
 function loadImage(file, max = 1400) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file), im = new Image();
@@ -694,31 +840,85 @@ function loadImage(file, max = 1400) {
     im.onerror = rej; im.src = url;
   });
 }
-async function applyImage(path, file) {
-  const { src, w, h } = await loadImage(file), p = page();
-  if (path === '__new') p.images.push(newImage(src));
-  else { set(p, path, src); if (/\.img$/.test(path)) set(p, path.replace(/img$/, 'ar'), +(w / h).toFixed(4)); }
+async function addToLib(file) {
+  const { src, w, h } = await loadImage(file);
+  const e = { id: uid(), name: file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim(), tags: '', src, ar: +(w / h).toFixed(4) };
+  lib().push(e); return e;
+}
+async function importFiles(files) {
+  const imgs = [...files].filter(f => f.type.startsWith('image/'));
+  const added = [];
+  for (const f of imgs) { try { added.push(await addToLib(f)); } catch (e) { /* imagen ilegible: se omite */ } }
+  saveLib();
+  if (libMode && added.length === 1) { pickInto(libMode.path, added[0].id); closeLib(); return; }
+  renderLib();
+}
+function pickInto(path, id) {
+  if (!path) return;
+  const p = page(), e = libById(id); if (!e) return;
+  if (path === '__new') p.images.push(newImage('lib:' + id));
+  else { set(p, path, 'lib:' + id); if (/\.img$/.test(path)) set(p, path.replace(/img$/, 'ar'), e.ar); }
   renderAll(); save();
 }
-$('fileImg').addEventListener('change', async e => {
-  const f = e.target.files[0]; e.target.value = '';
-  if (f && pendingUpload) await applyImage(pendingUpload, f);
-  pendingUpload = null;
+function openLib(path) { libMode = path ? { path } : null; $('lib').hidden = false; $('libQ').value = ''; renderLib(); }
+function closeLib() { $('lib').hidden = true; libMode = null; }
+function renderLib() {
+  const q = $('libQ').value.trim().toLowerCase();
+  const list = lib().filter(x => !q || (x.name + ' ' + x.tags).toLowerCase().includes(q));
+  $('libTitle').textContent = libMode ? 'Elegir imagen' : `Biblioteca de imágenes (${lib().length})`;
+  $('libGrid').innerHTML = list.length ? list.map(x => {
+    const n = libUse(x.id), pick = libMode ? `data-act="libPick" data-id="${x.id}"` : '';
+    return `<div class="lc" data-id="${x.id}"><div class="lth" ${pick} style="background-image:url(${x.src})"></div>
+      <input type="text" data-lib="name" value="${esc(x.name)}" placeholder="Nombre">
+      <input type="text" data-lib="tags" value="${esc(x.tags)}" placeholder="Etiquetas: galvanizado, codo…">
+      <div class="lf"><small>${n ? 'En uso: ' + n : 'Sin usar'}</small>${libMode ? `<button class="btn sm pri" ${pick}>Usar</button>` : ''}<button class="btn sm danger" data-act="libDel" data-id="${x.id}">Eliminar</button></div></div>`;
+  }).join('') : `<div class="empty">${lib().length ? 'Ninguna imagen coincide con la búsqueda.' : 'Aún no hay imágenes. Pulsa “Importar imágenes” o arrastra tus fotos aquí.'}</div>`;
+}
+$('bLib').onclick = () => openLib(null);
+$('bOv').onclick = () => { view = view === 'all' ? 'one' : 'all'; $('bOv').textContent = view === 'all' ? 'Volver a editar' : 'Vista general'; renderPreview(); };
+$('libQ').addEventListener('input', renderLib);
+$('libGrid').addEventListener('input', e => {
+  const t = e.target, id = t.closest('.lc') && t.closest('.lc').dataset.id, en = id && libById(id);
+  if (en && t.dataset.lib) { en[t.dataset.lib] = t.value; saveLib(); }
 });
+$('lib').addEventListener('click', e => { if (e.target === $('lib')) closeLib(); });
+$('lib').addEventListener('dragover', e => { e.preventDefault(); $('libGrid').classList.add('dragging'); });
+$('lib').addEventListener('dragleave', e => { if (e.target === $('lib') || e.target === $('libGrid')) $('libGrid').classList.remove('dragging'); });
+$('lib').addEventListener('drop', e => { e.preventDefault(); $('libGrid').classList.remove('dragging'); importFiles(e.dataTransfer.files); });
+$('fileLib').addEventListener('change', e => { const fs = [...e.target.files]; e.target.value = ''; importFiles(fs); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('lib').hidden) closeLib(); });
+
+let justResized = false;
+$('stage').addEventListener('pointerdown', e => {
+  const h = e.target.closest('[data-imgresize]'); if (!h || view !== 'one') return;
+  e.preventDefault(); e.stopPropagation();
+  const it = page().items[+h.dataset.imgresize], r = h.parentElement.getBoundingClientRect();
+  const sx = e.clientX, sy = e.clientY, w0 = r.width / scale, h0 = r.height / scale, s0 = it.imgS > 0 ? it.imgS : 100;
+  let raf = 0;
+  const mv = ev => {
+    const k = ((w0 + (ev.clientX - sx) / scale) / w0 + (h0 + (ev.clientY - sy) / scale) / h0) / 2;
+    it.imgS = Math.max(40, Math.min(300, Math.round(s0 * k)));
+    if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderPreview(); });
+  };
+  const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); justResized = true; setTimeout(() => { justResized = false; }, 120); renderEditor(); save(); };
+  window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+}, true);
 $('stage').addEventListener('click', e => {
-  const u = e.target.closest('[data-upload]'); if (!u || e.target.closest('[data-el]')) return;
-  pendingUpload = u.dataset.upload; $('fileImg').click();
+  const u = e.target.closest('[data-upload]'); if (!u || e.target.closest('[data-el]') || justResized || e.target.closest('[data-imgresize]')) return;
+  openLib(u.dataset.upload);
 });
 $('stage').addEventListener('dragover', e => { if (e.target.closest('[data-upload]')) e.preventDefault(); });
-$('stage').addEventListener('drop', e => {
+$('stage').addEventListener('drop', async e => {
   const u = e.target.closest('[data-upload]'); if (!u) return;
-  e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) applyImage(u.dataset.upload, f);
+  e.preventDefault(); const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) { const en = await addToLib(f); saveLib(); pickInto(u.dataset.upload, en.id); }
 });
 
 /* ---- Arrastrar y redimensionar elementos en la página ---- */
 $('stage').addEventListener('pointerdown', e => {
   const el = e.target.closest('[data-el]'); if (!el) return;
   e.preventDefault();
+  if (view !== 'one') return;
   const obj = get(page(), el.dataset.el), resize = !!e.target.closest('[data-resize]');
   const sx = e.clientX, sy = e.clientY, ox = obj.x, oy = obj.y, ow = obj.w;
   el.setPointerCapture(e.pointerId);
@@ -736,8 +936,8 @@ $('bPdf').onclick = () => { fillPrint(); setTimeout(() => window.print(), 150); 
 function fillPrint() { $('print').innerHTML = project.pages.flatMap(p => pageSheets(p, false)).join(''); }
 window.addEventListener('beforeprint', fillPrint);
 $('bNew').onclick = () => {
-  if (!confirm('¿Empezar un catálogo nuevo? Se borra lo actual (guarda antes tu archivo si lo necesitas).')) return;
-  project = { pages: [newProduct()] }; cur = 0; renderAll(); save();
+  if (!confirm('¿Empezar un catálogo nuevo? Se borran las páginas actuales (la biblioteca de imágenes se conserva). Guarda antes tu archivo si lo necesitas.')) return;
+  project = { library: lib(), pages: [newProduct()] }; cur = 0; renderAll(); save();
 };
 $('bSave').onclick = () => {
   const a = document.createElement('a');
@@ -747,7 +947,7 @@ $('bSave').onclick = () => {
 $('bOpen').onclick = () => $('fileJson').click();
 $('fileJson').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.pages)) throw 0; project = d; cur = 0; renderAll(); save(); }
+  try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.pages)) throw 0; project = d; lib(); cur = 0; renderAll(); save(); saveLib(); }
   catch { alert('Ese archivo no es un catálogo válido.'); }
 });
 window.addEventListener('resize', renderPreview);
@@ -757,6 +957,9 @@ window.addEventListener('resize', renderPreview);
   await idb.open();
   const saved = await idb.get('project');
   if (saved) { try { const d = JSON.parse(saved); if (d.pages && d.pages.length) project = d; } catch {} }
+  const sl = await idb.get('library');
+  if (sl) { try { project.library = JSON.parse(sl); } catch {} }
+  lib();
   renderAll();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderPreview);
 })();
