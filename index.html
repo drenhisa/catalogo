@@ -120,8 +120,8 @@ details details{background:#fafbfd}
 .page.s-lines .bar,.page.s-cards .bar{display:block}
 .page.s-clean .sec .bar{display:none}
 .page .it{position:absolute;display:flex;align-items:center;gap:14px}
-.page .it .im{flex:none;display:grid;place-items:center}
-.page .it .im img{display:block;mix-blend-mode:multiply}
+.page .it .im{flex:none;display:flex;align-items:center;justify-content:center}
+.page .it .im img{display:block;flex:none;mix-blend-mode:multiply}
 .page .it .tx{flex:1;min-width:0}
 .page .it .nm{font-family:Poppins,sans-serif;font-weight:600;color:var(--navy);text-align:center;line-height:1.22}
 .page .it .ns{font-family:Poppins,sans-serif;font-size:12px;font-weight:500;font-style:italic;text-align:center;color:var(--navy);margin-top:1px}
@@ -168,10 +168,17 @@ details details{background:#fafbfd}
 .page .bk-q .ql{font-size:26px;font-weight:400;margin-top:8px;letter-spacing:.3px}
 
 /* biblioteca */
-#lib{position:fixed;inset:0;background:rgba(20,28,46,.55);z-index:50;display:grid;place-items:center;padding:20px}
-#lib[hidden]{display:none}
+#lib,.ovl{position:fixed;inset:0;background:rgba(20,28,46,.55);z-index:50;display:grid;place-items:center;padding:20px}
+#lib[hidden],.ovl[hidden]{display:none}
 .libbox{background:var(--ui-panel);border-radius:12px;width:min(1020px,100%);max-height:100%;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
 .libhd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--ui-line);flex-wrap:wrap}
+.preset{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.preset select{border:1px solid var(--ui-line);border-radius:6px;padding:3px 6px;max-width:150px}
+.pr{border:1px solid var(--ui-line);border-radius:9px;padding:10px;display:grid;gap:6px;background:#fff}
+.pr input,.pr textarea{width:100%;border:1px solid var(--ui-line);border-radius:6px;padding:5px 8px}
+.pr .lf{display:flex;align-items:center;gap:8px}
+.pr .lf small{margin-right:auto;color:var(--ui-mute)}
+#preGrid{padding:14px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;flex:1;min-height:240px;align-content:start}
 .libhd b{font-size:15px;margin-right:auto}
 .libhd input[type=text]{border:1px solid var(--ui-line);border-radius:6px;padding:6px 9px;min-width:220px}
 .libtrim{font-size:12px;color:var(--ui-mute);display:flex;align-items:center;gap:5px}
@@ -231,6 +238,13 @@ details details{background:#fafbfd}
   <div id="libGrid"></div>
   <div class="libft">Importa varias fotos a la vez (o arrástralas aquí). Ponles nombre y etiquetas para encontrarlas rápido. Cada foto se importa una sola vez y se reutiliza en todo el catálogo.</div>
 </div></div>
+<div id="pre" class="ovl" hidden><div class="libbox">
+  <div class="libhd"><b>Listas de medidas guardadas</b>
+    <button class="btn pri" data-act="preNew">＋ Nueva lista</button>
+    <button class="btn" data-act="preClose">Cerrar</button></div>
+  <div id="preGrid"></div>
+  <div class="libft">Usa una lista en cualquier artículo con “Vincular” (se actualiza en todos lados si la cambias aquí) o con “Copiar aquí”. También puedes escribir <b>@Nombre</b> en el campo de medidas.</div>
+</div></div>
 <input type="file" id="fileLib" accept="image/*" multiple hidden>
 <input type="file" id="fileJson" accept=".json,application/json" hidden>
 
@@ -269,7 +283,7 @@ function fmtMeasure(t, unit, gap) {
 }
 function parseMeasures(text, unit, gap, doFmt = true) {
   const out = [];
-  String(text || '').split('\n').forEach(line => {
+  expandPresets(String(text || '')).split('\n').forEach(line => {
     if (!line.trim()) return;
     if (line.includes('|')) {
       const [a, ...b] = line.split('|');
@@ -341,6 +355,22 @@ const SAMPLE = () => ({ library: [], pages: [
    Estado + persistencia (IndexedDB, para guardar fotos sin límite)
    ========================================================= */
 let project = SAMPLE();
+let presets = [];
+const PRESET_DEFAULTS = () => [
+  { id: uid(), name: 'Bridado 2 a 36', items: '2, 2 1/2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36' },
+  { id: uid(), name: 'Bridado 2 a 12', items: '2, 2 1/2, 3, 4, 6, 8, 10, 12' },
+  { id: uid(), name: 'Galvanizado ½ a 4', items: '1/2, 3/4, 1, 1 1/4, 1 1/2, 2, 2 1/2, 3, 4' },
+  { id: uid(), name: 'PVC 1½ a 12', items: '1 1/2, 2, 2 1/2, 3, 4, 6, 8, 10, 12' },
+  { id: uid(), name: 'PEAD 1½ a 8', items: '1 1/2, 2, 2 1/2, 3, 4, 6, 8' }
+];
+const presetByName = n => { const k = norm(n); return presets.find(x => norm(x.name) === k); };
+function expandPresets(text, depth = 0) {                   // una línea "@Nombre" se sustituye por la lista guardada
+  if (!text || depth > 2) return text;
+  return String(text).split('\n').map(l => {
+    const m = l.match(/^\s*@(.+?)\s*$/); if (!m) return l;
+    const pr = presetByName(m[1]); return pr ? expandPresets(pr.items, depth + 1) : l;
+  }).join('\n');
+}
 let view = 'one';
 const lib = () => project.library || (project.library = []);
 const libById = id => lib().find(x => x.id === id);
@@ -386,6 +416,8 @@ function undo(d) {
   hi = n; project.pages = JSON.parse(hist[hi]); cur = Math.min(cur, project.pages.length - 1);
   renderAll(); save(); syncUndo();
 }
+let presTimer;
+function savePresets() { clearTimeout(presTimer); presTimer = setTimeout(() => idb.put('presets', JSON.stringify(presets)), 300); }
 let libTimer;
 function saveLib() { clearTimeout(libTimer); libTimer = setTimeout(() => idb.put('library', JSON.stringify(lib())), 400); }
 const $ = id => document.getElementById(id);
@@ -471,9 +503,9 @@ function measureEl(style) {
   _meas.className = 'page s-' + style;
   return _meas;
 }
-function imgSize(it, p, iw) {                         // el ancho nunca pasa de la columna de la foto: crece hacia arriba/abajo
+function imgSize(it, p, iw, extra) {                  // crece hacia arriba/abajo y un poco hacia la izquierda; nunca hacia las medidas
   const ar = imgAr(it.img, it.ar), k = (it.imgS > 0 ? it.imgS : 100) / 100;
-  const h = Math.min((p.imgH || 150) * k, iw / ar);
+  const h = Math.min((p.imgH || 150) * k, (iw + (extra || 0)) / ar);
   return { w: Math.round(h * ar), h: Math.round(h) };
 }
 function measFont(list, rows, wide) {
@@ -499,7 +531,8 @@ function itemHTML(it, p, o) {
   const rh = o.edit ? `<div class="rh2" data-imgresize="${o.i}" title="Arrastra para agrandar o achicar la foto"></div>` : '';
   const k = (it.imgS > 0 ? it.imgS : 100) / 100;
   let im;
-  if (imgSrc(it.img)) { const z = imgSize(it, p, iw); im = `<div class="im" ${up} style="width:${iw}px;height:${z.h}px"><img src="${imgSrc(it.img)}" style="width:${z.w}px;height:${z.h}px" draggable="false">${rh}</div>`; }
+  const extra = cards ? 10 : (o.wide ? 40 : 26);
+  if (imgSrc(it.img)) { const z = imgSize(it, p, iw, extra); im = `<div class="im" ${up} style="width:${iw}px;height:${z.h}px;justify-content:${z.w > iw ? 'flex-end' : 'center'}"><img src="${imgSrc(it.img)}" style="width:${z.w}px;height:${z.h}px" draggable="false">${rh}</div>`; }
   else if (o.edit) im = `<div class="im ph" ${up} style="width:${iw}px;height:${Math.round(Math.min(100, p.imgH || 150) * k)}px">＋ foto${rh}</div>`;
   else im = `<div class="im" style="width:${iw}px"></div>`;
 
@@ -691,7 +724,15 @@ function bulkItems(txt) {
     return { ...newItem(), name: (parts[0] || '').trim(), items: (parts[1] || '').trim(), sub: (parts[2] || '').trim() };
   });
 }
-const MEAS_HINT = '<p class="hint">Una medida por línea o separadas por coma. Escribe <b>1/2</b> o <b>2 1/2</b> y se convierte a ½” y 2½”. Con valor: <b>1 | 50mts y 100mts</b></p>';
+function measField(path, rows) {
+  const opts = presets.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  return F('Medidas', path, { rows }) + `<div class="preset"><select title="Listas guardadas"><option value="">Lista guardada…</option>${opts}</select>
+    <button class="btn sm" data-act="preLink" data-p="${path}" title="Si después cambias la lista guardada, se actualiza en todos los lugares donde la usaste">Vincular</button>
+    <button class="btn sm" data-act="preCopy" data-p="${path}" title="Copia las medidas aquí para editarlas solo en este artículo">Copiar aquí</button>
+    <button class="btn sm" data-act="preSave" data-p="${path}">💾 Guardar esta lista</button>
+    <button class="btn sm" data-act="preManage">Administrar</button></div>`;
+}
+const MEAS_HINT = '<p class="hint">Una medida por línea o separadas por coma. Escribe <b>1/2</b> o <b>2 1/2</b> y se convierte a ½” y 2½”. Con valor: <b>1 | 50mts y 100mts</b>. Escribe <b>@Nombre</b> para usar una lista guardada.</p>';
 
 function measOpts(base) {
   return `<div class="row2">${F('Unidad al final', base + 'unit', { ph: '”' })}${F('Máx. por columna', base + 'max', { type: 'number', min: 1 })}</div>
@@ -752,7 +793,7 @@ function renderEditor() {
       ${F('Disposición de grupos', 'groupsLayout', { opts: [['side', 'Lado a lado'], ['stack', 'Uno debajo de otro']] })}
       ${p.groups.map((g, i) => det('g' + i, esc(g.heading || 'Grupo ' + (i + 1)), `
         ${F('Encabezado (ej. Cédula 40)', `groups.${i}.heading`)}
-        ${F('Medidas', `groups.${i}.items`, { rows: 8 })}${MEAS_HINT}
+        ${measField(`groups.${i}.items`, 8)}${MEAS_HINT}
         ${F('Estilo', `groups.${i}.style`, { opts: [['list', 'Lista'], ['chips', 'En línea (diámetros)']] })}
         ${F('Ancho (% — 0 = automático)', `groups.${i}.w`, { type: 'number', min: 0, max: 100 })}
         ${measOpts(`groups.${i}.`)}
@@ -791,9 +832,9 @@ function renderEditor() {
       ${F('Nombre', `items.${i}.name`)}${F('Detalle (ej. Vástago fijo)', `items.${i}.sub`)}
       ${imgField('Foto', `items.${i}.img`)}
       ${F('Tamaño de la foto (%)', `items.${i}.imgS`, { type: 'range', min: 40, max: 300 })}
-      <p class="hint">La foto crece hacia arriba y abajo; su columna mide lo mismo en todos los artículos, así las medidas siempre quedan centradas y alineadas. También puedes arrastrar el cuadrito azul de la foto (solo en vertical). Si ya no crece, llegó al ancho de la columna: súbelo en “Foto: ancho máx.” de la página.</p>
+      <p class="hint">La foto crece hacia arriba y abajo, y puede sobresalir un poco hacia la izquierda; su columna mide lo mismo en todos los artículos, así las medidas nunca se mueven. También puedes arrastrar el cuadrito azul de la foto (solo en vertical). Si ya no crece, subió hasta su límite: aumenta “Foto: ancho máx.” en el diseño de la página.</p>
       ${F('Tamaño en la hoja', `items.${i}.span`, { opts: [[1, 'Normal (media hoja)'], [2, 'Ancho completo (listas muy largas)']], num: true })}
-      ${F('Medidas', `items.${i}.items`, { rows: 5 })}${MEAS_HINT}
+      ${measField(`items.${i}.items`, 5)}${MEAS_HINT}
       <div class="row2">${F('Unidad al final', `items.${i}.unit`, { ph: '”' })}${F('Espacio “2 ½”', `items.${i}.gap`, { chk: true })}</div>
       ${F('Viñetas •', `items.${i}.bullets`, { chk: true })}
       ${moveBtns('items', i, p.items.length, 'artículo')}`, p.items.length === 1)).join('') +
@@ -845,6 +886,27 @@ document.addEventListener('click', async e => {
       openState[(path === 'groups' ? 'g' : path === 'texts' ? 't' : path === 'qrs' ? 'q' : 'i') + (arr.length - 1)] = true; break;
     }
     case 'autoImg': autoAssign(); break;
+    case 'preManage': openPre(); return;
+    case 'preClose': $('pre').hidden = true; return;
+    case 'preNew': presets.unshift({ id: uid(), name: 'Nueva lista', items: '' }); savePresets(); renderPre(); return;
+    case 'preDel': {
+      const pr = presets.find(x => x.id === b.dataset.id), n = pr ? presetUse(pr.name) : 0;
+      if (!pr || (n && !confirm(`Esta lista se usa en ${n} lugar(es). Si la eliminas, esos artículos mostrarán “@${pr.name}”. ¿Eliminar?`))) return;
+      presets = presets.filter(x => x.id !== pr.id); savePresets(); renderPre(); renderAll(); return;
+    }
+    case 'preLink': case 'preCopy': {
+      const id = b.parentElement.querySelector('select').value, pr = presets.find(x => x.id === id);
+      if (!pr) { $('status').textContent = 'Primero elige una lista guardada'; return; }
+      set(p, path, act === 'preLink' ? '@' + pr.name : pr.items); break;
+    }
+    case 'preSave': {
+      const items = expandPresets(String(get(p, path) || '')).trim(); if (!items) { $('status').textContent = 'No hay medidas para guardar'; return; }
+      const name = (prompt('Nombre de la lista (ej. Bridado 2 a 36)') || '').trim(); if (!name) return;
+      const ex = presetByName(name);
+      if (ex) { if (!confirm(`Ya existe “${ex.name}”. ¿Reemplazar sus medidas?`)) return; ex.items = items; }
+      else presets.push({ id: uid(), name, items });
+      savePresets(); break;
+    }
     case 'bulkAdd': { const t = $('bulkTxt').value; if (!t.trim()) return; p.items.push(...bulkItems(t)); $('bulkTxt').value = ''; break; }
     case 'addSection': p.items.push(newSection()); openState['i' + (p.items.length - 1)] = true; break;
     case 'del': get(p, path).splice(i, 1); break;
@@ -865,6 +927,34 @@ document.addEventListener('click', async e => {
   }
   renderAll(); save();
 });
+
+/* ---- Listas de medidas guardadas ---- */
+const jsEsc = t => JSON.stringify(t).slice(1, -1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const presetUse = name => (JSON.stringify(project.pages).match(new RegExp('(^|\\\\n|")@' + jsEsc(name) + '(?=\\\\n|")', 'gi')) || []).length;
+function renamePresetRefs(oldN, newN) {
+  if (!oldN || oldN === newN) return;
+  const nj = JSON.stringify(newN).slice(1, -1).replace(/\$/g, '$$$$');
+  project.pages = JSON.parse(JSON.stringify(project.pages).replace(new RegExp('(^|\\\\n|")@' + jsEsc(oldN) + '(?=\\\\n|")', 'gi'), (m, pre) => pre + '@' + newN.replace(/\\/g, '\\\\').replace(/"/g, '\\"')));
+}
+function renderPre() {
+  $('preGrid').innerHTML = presets.length ? presets.map(x => `<div class="pr" data-id="${x.id}">
+    <input type="text" data-pre="name" value="${esc(x.name)}" placeholder="Nombre de la lista">
+    <textarea rows="3" data-pre="items" placeholder="2, 2 1/2, 3, 4…">${esc(x.items)}</textarea>
+    <div class="lf"><small>Usada en ${presetUse(x.name)} lugar(es)</small><button class="btn sm danger" data-act="preDel" data-id="${x.id}">Eliminar</button></div></div>`).join('')
+    : '<div class="empty" style="grid-column:1/-1;text-align:center;color:var(--ui-mute);padding:40px">Aún no hay listas. Pulsa “Nueva lista”.</div>';
+}
+const openPre = () => { $('pre').hidden = false; renderPre(); };
+$('preGrid').addEventListener('input', e => {
+  const t = e.target, box = t.closest('.pr'); if (!box || !t.dataset.pre) return;
+  const pr = presets.find(x => x.id === box.dataset.id); if (!pr) return;
+  if (t.dataset.pre === 'items') { pr.items = t.value; savePresets(); renderPreview(); renderSide(); }
+});
+$('preGrid').addEventListener('change', e => {                                     // renombrar al salir del campo (actualiza los vínculos)
+  const t = e.target, box = t.closest('.pr'); if (!box || t.dataset.pre !== 'name') return;
+  const pr = presets.find(x => x.id === box.dataset.id), old = pr.name, nw = t.value.trim() || old;
+  if (nw !== old) { pr.name = nw; renamePresetRefs(old, nw); savePresets(); save(); renderAll(); renderPre(); }
+});
+$('pre').addEventListener('click', e => { if (e.target === $('pre')) $('pre').hidden = true; });
 
 /* ---- Biblioteca de imágenes ---- */
 let libMode = null;                     // null = administrar · {path} = elegir para ese campo
@@ -1000,13 +1090,13 @@ $('bNew').onclick = () => {
 };
 $('bSave').onclick = () => {
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(project)], { type: 'application/json' }));
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ ...project, presets })], { type: 'application/json' }));
   a.download = 'catalogo-drenhisa.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 $('bOpen').onclick = () => $('fileJson').click();
 $('fileJson').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.pages)) throw 0; project = d; lib(); cur = 0; renderAll(); save(); saveLib(); }
+  try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.pages)) throw 0; project = d; if (Array.isArray(d.presets)) { presets = d.presets; savePresets(); } lib(); cur = 0; renderAll(); save(); saveLib(); }
   catch { alert('Ese archivo no es un catálogo válido.'); }
 });
 window.addEventListener('resize', renderPreview);
@@ -1026,6 +1116,8 @@ document.addEventListener('keydown', e => {
   if (saved) { try { const d = JSON.parse(saved); if (d.pages && d.pages.length) project = d; } catch {} }
   const sl = await idb.get('library');
   if (sl) { try { project.library = JSON.parse(sl); } catch {} }
+  const sp = await idb.get('presets');
+  if (sp) { try { presets = JSON.parse(sp); } catch {} } else { presets = PRESET_DEFAULTS(); savePresets(); }
   lib();
   hist = [JSON.stringify(project.pages)]; hi = 0; syncUndo();
   renderAll();
