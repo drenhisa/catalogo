@@ -202,6 +202,7 @@ details details{background:#fafbfd}
 #expHost{position:fixed;left:0;top:0;z-index:40;pointer-events:none}
 #exp.busy{background:#1d2433}
 .page.expo{background:transparent;box-shadow:none}
+.expo.notitles .gh,.expo.notitles .sec,.expo.notitles .hd{visibility:hidden}
 .expo.nophoto .im img,.expo.nophoto .logo,.expo.nophoto .el:not(.tx){visibility:hidden}
 .expo.nophoto .im{background:transparent!important;border-color:transparent!important}
 
@@ -263,7 +264,10 @@ details details{background:#fafbfd}
     <div class="row2">
       <label class="f"><span>Resolución</span><select id="expRes"><option value="3">Alta (3×)</option><option value="4" selected>Muy alta (4×)</option><option value="6">Máxima (6×)</option></select></label>
       <label class="f"><span>Fondo</span><select id="expBg"><option value="t" selected>Transparente</option><option value="w">Blanco</option></select></label></div>
-    <label class="f chk"><input type="checkbox" id="expPhotos"><span>Incluir las fotos (solo aplica a “hoja completa”)</span></label>
+    <label class="f chk"><input type="checkbox" id="expPhotos"><span>Incluir las fotos (solo “hoja completa”)</span></label>
+    <label class="f chk"><input type="checkbox" id="expTitles"><span>Incluir títulos de la página y de las secciones (solo “hoja completa”)</span></label>
+    <label class="f chk"><input type="checkbox" id="expCrop" checked><span>Cortar abajo donde termina el contenido (solo “hoja completa”)</span></label>
+    <label class="f"><span>Las listas empiezan a (px desde arriba, hoja de 1056 px de alto) — igual en todas las hojas</span><input type="number" id="expStart" value="130" min="40" max="600"></label>
     <p class="hint" id="expInfo"></p>
     <button class="btn pri" id="expGo">Generar y descargar</button>
     <div class="hint" id="expMsg"></div>
@@ -339,7 +343,7 @@ const newBack = () => ({ id: uid(), type: 'back', caption: 'NUESTRA UBICACIÓN',
 const newQr = () => ({ img: '', label: 'ETIQUETA' });
 const newGrid = () => ({
   id: uid(), type: 'grid', title: 'Título de la página', subtitle: '', accent: 'blue',
-  style: 'clean', gapY: 0, snap: 60, imgW: 128, imgH: 150, items: [newItem()]
+  style: 'clean', gapY: 0, snap: 60, startY: 0, imgW: 128, imgH: 150, items: [newItem()]
 });
 const newItem = () => ({ kind: 'item', name: 'Nombre del artículo', sub: '', img: '', ar: 1, imgS: 100, span: 1, items: '', unit: '”', gap: true, bullets: true });
 const newSection = () => ({ kind: 'section', name: 'Título de la sección', sub: '' });
@@ -584,7 +588,7 @@ function layoutGrid(p) {
   const laneW = (LAY.W - LAY.gap) / 2, tol = p.snap == null ? 60 : p.snap;
   const m = measureEl(st);
   m.innerHTML = `<div class="gh" style="left:0;right:auto;width:${LAY.W}px">${headerHTML(p).replace(/^<div class="gh">/, '').replace(/<\/div>$/, '')}</div>`;
-  const y0 = 42 + m.firstChild.offsetHeight + 28;
+  const y0 = p.startY > 0 ? p.startY : 42 + m.firstChild.offsetHeight + 28;
   const items = p.items.map((it, i) => ({ it, i, sec: it.kind === 'section', wide: it.kind !== 'section' && +it.span === 2 }));
   m.innerHTML = items.map(o => itemHTML(o.it, p, { i: o.i, wide: o.wide, w: (o.sec || o.wide) ? LAY.W : laneW })).join('');
   items.forEach((o, k) => { o.h = m.children[k].offsetHeight; });
@@ -851,6 +855,7 @@ function renderEditor() {
       ${F('Estilo', 'style', { opts: [['clean', 'Clásico (como el catálogo actual)'], ['lines', 'Con separadores'], ['cards', 'Tarjetas']] })}
       <div class="row2">${F('Foto: ancho máx. (px)', 'imgW', { type: 'number', min: 60 })}${F('Foto: alto máx. (px)', 'imgH', { type: 'number', min: 60 })}</div>
       <div class="row2">${F('Espacio entre filas (0 = auto)', 'gapY', { type: 'number', min: 0 })}${F('Alinear si difieren menos de (px)', 'snap', { type: 'number', min: 0 })}</div>
+      ${F('Las listas empiezan a (px desde arriba, 0 = según el título)', 'startY', { type: 'number', min: 0 })}
       <p class="hint">Las medidas siempre van en 2 columnas. Si un lado queda un poco más corto que el otro, se alinean; si la diferencia es grande, cada lado sigue su propio ritmo. Cuando no cabe más, sigue en una hoja nueva.</p>`, true);
     h += det('its', `Artículos (${p.items.filter(x => x.kind !== 'section').length})`, p.items.map((it, i) => it.kind === 'section'
       ? det('i' + i, `§ ${esc(it.name)}`, `${F('Título de la sección', `items.${i}.name`)}${F('Subtítulo', `items.${i}.sub`)}${moveBtns('items', i, p.items.length, 'sección')}`)
@@ -960,12 +965,21 @@ const toBlob = c => new Promise(r => c.toBlob(r, 'image/png'));
 function updateExpInfo() {
   const sc = +$('expRes').value, m = $('expMode').value;
   $('expInfo').textContent = m === 'sheet'
-    ? `Cada hoja sale de ${PW * sc} × ${PH * sc} px. Las fotos se dejan vacías para que pongas las tuyas en Canva, en los mismos lugares.`
+    ? `Cada hoja mide ${PW * sc} px de ancho. Arriba se conserva el espacio de los títulos (aunque no se dibujen) para que todas las listas empiecen en el mismo lugar; abajo se corta donde termina el contenido. Las fotos quedan vacías para que pongas las tuyas en Canva.`
     : `Cada bloque es de unos ${Math.round(224 * sc)} px de ancho (la altura depende de las medidas). Todos tienen el mismo ancho, así quedan alineados al pegarlos en Canva.`;
 }
-async function renderNode(node, scale, transparent) {
+async function renderNode(node, scale, transparent, crop) {
   const host = $('expHost'); host.appendChild(node);
   try {
+    if (crop) {                                            // altura = hasta el último elemento visible (el espacio de arriba se conserva)
+      const nr = node.getBoundingClientRect(); let bottom = 0;
+      node.querySelectorAll('*').forEach(el => {
+        const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.display === 'none') return;
+        const r = el.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return;
+        bottom = Math.max(bottom, r.bottom - nr.top);
+      });
+      if (bottom > 0) node.style.height = Math.ceil(Math.min(PH, bottom + 14)) + 'px';
+    }
     return await html2canvas(node, { backgroundColor: transparent ? null : '#ffffff', scale, useCORS: true, logging: false,
       onclone: d => ['app', 'print', 'lib', 'pre', 'exp'].forEach(id => { const e = d.getElementById(id); if (e) e.remove(); }) });
   } finally { node.remove(); }
@@ -986,7 +1000,7 @@ function itemExportNode(p, it, i) {
 }
 async function runExport() {
   const mode = $('expMode').value, scope = $('expScope').value, scale = +$('expRes').value,
-        transparent = $('expBg').value === 't', photos = $('expPhotos').checked, msg = $('expMsg');
+        transparent = $('expBg').value === 't', photos = $('expPhotos').checked, titles = $('expTitles').checked, crop = $('expCrop').checked, startY = Math.max(40, +$('expStart').value || 130), msg = $('expMsg');
   const pages = scope === 'cur' ? [[cur, page()]] : project.pages.map((p, i) => [i, p]);
   if (typeof html2canvas === 'undefined') { msg.textContent = 'No se cargó la librería de imágenes (carpeta vendor). Abre la herramienta desde la versión publicada o junto con su carpeta vendor.'; return; }
   const files = [];
@@ -1001,15 +1015,15 @@ async function runExport() {
         let n = 0;
         p.items.forEach((it, i) => { n++; jobs.push({ name: `${pname}/${String(n).padStart(2, '0')} ${slug(it.name + (it.sub ? ' - ' + it.sub : ''))}.png`, make: () => itemExportNode(p, it, i) }); });
       } else {
-        pageSheets(p, false).forEach((html, j) => jobs.push({ name: `${pname}${j ? ' hoja ' + (j + 1) : ''}.png`, make: () => {
+        pageSheets(p.type === 'grid' ? { ...p, startY } : p, false).forEach((html, j) => jobs.push({ name: `${pname}${j ? ' hoja ' + (j + 1) : ''}.png`, make: () => {
           const w = document.createElement('div'); w.innerHTML = html;
-          const el = w.firstElementChild; el.classList.add('expo'); if (!photos) el.classList.add('nophoto'); return el; } }));
+          const el = w.firstElementChild; el.classList.add('expo'); if (!photos) el.classList.add('nophoto'); if (!titles) el.classList.add('notitles'); return el; }, crop: true }));
       }
     });
     if (!jobs.length) { msg.textContent = mode === 'items' ? 'No hay páginas de “varios artículos” en lo que elegiste.' : 'No hay nada que exportar.'; return; }
     for (let k = 0; k < jobs.length; k++) {
       msg.textContent = `Generando ${k + 1} de ${jobs.length}…`;
-      const c = await renderNode(jobs[k].make(), scale, transparent);
+      const c = await renderNode(jobs[k].make(), scale, transparent, jobs[k].crop && crop);
       files.push({ name: jobs[k].name, blob: await toBlob(c), w: c.width, h: c.height });
       await new Promise(r => setTimeout(r, 0));
     }

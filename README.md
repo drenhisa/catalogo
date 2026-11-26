@@ -9,7 +9,7 @@ Abre `index.html` en Chrome (doble clic) o usa la versión publicada en Vercel. 
 - **Tamaño de la foto de cada artículo**: control deslizante o arrastrando el cuadrito azul de la esquina de la foto.
 - **Miniaturas** de cada página y **Vista general** de todo el catálogo.
 - Medidas: escribe `1/2`, `2 1/2` y se convierten a ½”, 2½”. Con valor: `1 | 50mts y 100mts`.
-- **Exportar PNG (Canva)**: genera cada artículo (nombre + medidas, sin foto) como PNG transparente de alta resolución (3×, 4× o 6×), o cada hoja completa sin fotos, en un ZIP. Pensado para pegarlos en Canva sobre tus propios diseños.
+- **Exportar PNG (Canva)**: genera cada artículo (nombre + medidas, sin foto) como PNG transparente de alta resolución (3×, 4× o 6×), o cada hoja completa sin fotos ni títulos, cortada abajo donde termina el contenido y con las listas empezando siempre en el mismo punto, en un ZIP. Pensado para pegarlos en Canva sobre tus propios diseños.
 - Se autoguarda en el navegador (incluida la biblioteca); usa **Guardar archivo** / **Abrir…** como respaldo.
 - **Exportar PDF**: en el diálogo de impresión elige "Guardar como PDF", tamaño Carta, márgenes ninguno y activa "Gráficos de fondo".
 
