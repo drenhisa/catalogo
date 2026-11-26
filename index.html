@@ -198,6 +198,13 @@ details details{background:#fafbfd}
 .ovc .sizer{margin:0 0 6px}
 .ovc.sel .sizer{outline:3px solid var(--ui-accent)}
 
+/* exportación a PNG */
+#expHost{position:fixed;left:0;top:0;z-index:40;pointer-events:none}
+#exp.busy{background:#1d2433}
+.page.expo{background:transparent;box-shadow:none}
+.expo.nophoto .im img,.expo.nophoto .logo,.expo.nophoto .el:not(.tx){visibility:hidden}
+.expo.nophoto .im{background:transparent!important;border-color:transparent!important}
+
 /* ---------- Print ---------- */
 #print{display:none}
 @page{size:8.5in 11in;margin:0}
@@ -222,6 +229,7 @@ details details{background:#fafbfd}
     <button class="btn" id="bNew">Nuevo</button>
     <button class="btn" id="bOpen">Abrir…</button>
     <button class="btn" id="bSave">Guardar archivo</button>
+    <button class="btn" id="bExp">Exportar PNG (Canva)</button>
     <button class="btn pri" id="bPdf">Exportar PDF</button>
   </div>
   <aside id="side"></aside>
@@ -245,9 +253,27 @@ details details{background:#fafbfd}
   <div id="preGrid"></div>
   <div class="libft">Usa una lista en cualquier artículo con “Vincular” (se actualiza en todos lados si la cambias aquí) o con “Copiar aquí”. También puedes escribir <b>@Nombre</b> en el campo de medidas.</div>
 </div></div>
+<div id="exp" class="ovl" hidden><div class="libbox" style="max-width:600px">
+  <div class="libhd"><b>Exportar listas como PNG (para pegar en Canva)</b><button class="btn" data-act="expClose">Cerrar</button></div>
+  <div style="padding:16px;display:grid;gap:12px;overflow:auto">
+    <label class="f"><span>Qué exportar</span><select id="expMode">
+      <option value="items">Cada artículo en su propio PNG: nombre + medidas, sin foto</option>
+      <option value="sheet">Cada hoja completa (Carta), sin fotos</option></select></label>
+    <label class="f"><span>De qué páginas</span><select id="expScope"><option value="cur">Solo la página que estoy editando</option><option value="all">Todo el catálogo</option></select></label>
+    <div class="row2">
+      <label class="f"><span>Resolución</span><select id="expRes"><option value="3">Alta (3×)</option><option value="4" selected>Muy alta (4×)</option><option value="6">Máxima (6×)</option></select></label>
+      <label class="f"><span>Fondo</span><select id="expBg"><option value="t" selected>Transparente</option><option value="w">Blanco</option></select></label></div>
+    <label class="f chk"><input type="checkbox" id="expPhotos"><span>Incluir las fotos (solo aplica a “hoja completa”)</span></label>
+    <p class="hint" id="expInfo"></p>
+    <button class="btn pri" id="expGo">Generar y descargar</button>
+    <div class="hint" id="expMsg"></div>
+  </div></div></div>
+<div id="expHost"></div>
 <input type="file" id="fileLib" accept="image/*" multiple hidden>
 <input type="file" id="fileJson" accept=".json,application/json" hidden>
 
+<script src="vendor/html2canvas.min.js"></script>
+<script src="vendor/jszip.min.js"></script>
 <script>
 /* =========================================================
    Utilidades
@@ -927,6 +953,81 @@ document.addEventListener('click', async e => {
   }
   renderAll(); save();
 });
+
+/* ---- Exportar PNG (para Canva) ---- */
+const slug = t => String(t || '').replace(/\[\[|\]\]|\*\*/g, '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'sin titulo';
+const toBlob = c => new Promise(r => c.toBlob(r, 'image/png'));
+function updateExpInfo() {
+  const sc = +$('expRes').value, m = $('expMode').value;
+  $('expInfo').textContent = m === 'sheet'
+    ? `Cada hoja sale de ${PW * sc} × ${PH * sc} px. Las fotos se dejan vacías para que pongas las tuyas en Canva, en los mismos lugares.`
+    : `Cada bloque es de unos ${Math.round(224 * sc)} px de ancho (la altura depende de las medidas). Todos tienen el mismo ancho, así quedan alineados al pegarlos en Canva.`;
+}
+async function renderNode(node, scale, transparent) {
+  const host = $('expHost'); host.appendChild(node);
+  try {
+    return await html2canvas(node, { backgroundColor: transparent ? null : '#ffffff', scale, useCORS: true, logging: false,
+      onclone: d => ['app', 'print', 'lib', 'pre', 'exp'].forEach(id => { const e = d.getElementById(id); if (e) e.remove(); }) });
+  } finally { node.remove(); }
+}
+function itemExportNode(p, it, i) {
+  const st = p.style || 'clean', cards = st === 'cards', wide = it.kind !== 'section' && +it.span === 2;
+  const laneW = (LAY.W - LAY.gap) / 2, iw = (p.imgW || 128) - (cards ? 16 : 0);
+  const w = it.kind === 'section' ? LAY.W : wide ? LAY.W : laneW;
+  const wrap = document.createElement('div');
+  wrap.className = `page s-${st} expo`;
+  wrap.style.cssText = 'position:relative;width:max-content;height:auto;overflow:visible;transform:none;padding:8px;--gy:0px';
+  wrap.innerHTML = itemHTML(it, p, { i, wide, w, x: 0, y: 0, edit: false, last: true });
+  const el = wrap.querySelector('.it, .sec');
+  el.style.position = 'static'; el.style.left = el.style.top = '';
+  if (it.kind === 'section') { el.style.width = 'max-content'; el.querySelector('.bar') && (el.querySelector('.bar').style.width = '58px'); }
+  else { const im = el.querySelector('.im'); if (im) im.style.display = 'none'; el.style.width = Math.round(w - (cards ? 0 : 0) - (iw + 14)) + 'px'; }
+  return wrap;
+}
+async function runExport() {
+  const mode = $('expMode').value, scope = $('expScope').value, scale = +$('expRes').value,
+        transparent = $('expBg').value === 't', photos = $('expPhotos').checked, msg = $('expMsg');
+  const pages = scope === 'cur' ? [[cur, page()]] : project.pages.map((p, i) => [i, p]);
+  if (typeof html2canvas === 'undefined') { msg.textContent = 'No se cargó la librería de imágenes (carpeta vendor). Abre la herramienta desde la versión publicada o junto con su carpeta vendor.'; return; }
+  const files = [];
+  $('exp').classList.add('busy'); $('expGo').disabled = true;
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    let jobs = [];
+    pages.forEach(([pi, p]) => {
+      const pname = `P${String(pi + 1).padStart(2, '0')} ${slug(p.type === 'back' ? p.caption : p.title)}`;
+      if (mode === 'items') {
+        if (p.type !== 'grid') return;
+        let n = 0;
+        p.items.forEach((it, i) => { n++; jobs.push({ name: `${pname}/${String(n).padStart(2, '0')} ${slug(it.name + (it.sub ? ' - ' + it.sub : ''))}.png`, make: () => itemExportNode(p, it, i) }); });
+      } else {
+        pageSheets(p, false).forEach((html, j) => jobs.push({ name: `${pname}${j ? ' hoja ' + (j + 1) : ''}.png`, make: () => {
+          const w = document.createElement('div'); w.innerHTML = html;
+          const el = w.firstElementChild; el.classList.add('expo'); if (!photos) el.classList.add('nophoto'); return el; } }));
+      }
+    });
+    if (!jobs.length) { msg.textContent = mode === 'items' ? 'No hay páginas de “varios artículos” en lo que elegiste.' : 'No hay nada que exportar.'; return; }
+    for (let k = 0; k < jobs.length; k++) {
+      msg.textContent = `Generando ${k + 1} de ${jobs.length}…`;
+      const c = await renderNode(jobs[k].make(), scale, transparent);
+      files.push({ name: jobs[k].name, blob: await toBlob(c), w: c.width, h: c.height });
+      await new Promise(r => setTimeout(r, 0));
+    }
+    let blob, fname;
+    if (files.length === 1) { blob = files[0].blob; fname = files[0].name.split('/').pop(); }
+    else {
+      const zip = new JSZip(); files.forEach(f => zip.file(f.name, f.blob));
+      blob = await zip.generateAsync({ type: 'blob' }); fname = 'catalogo-drenhisa-png.zip';
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    msg.textContent = `Listo: ${files.length} imagen(es) · ${files[0].w} × ${files[0].h} px${files.length > 1 ? ' (la primera)' : ''}. Se descargó ${fname}.`;
+  } catch (e) { msg.textContent = 'No se pudo generar: ' + (e && e.message || e); }
+  finally { $('exp').classList.remove('busy'); $('expGo').disabled = false; }
+}
+$('bExp').onclick = () => { $('exp').hidden = false; $('expMsg').textContent = ''; updateExpInfo(); };
+['expMode', 'expRes'].forEach(id => $('' + id).addEventListener('change', updateExpInfo));
+$('expGo').onclick = runExport;
+$('exp').addEventListener('click', e => { if (e.target === $('exp') || e.target.closest('[data-act=expClose]')) $('exp').hidden = true; });
 
 /* ---- Listas de medidas guardadas ---- */
 const jsEsc = t => JSON.stringify(t).slice(1, -1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
