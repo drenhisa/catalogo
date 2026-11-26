@@ -1,0 +1,3 @@
+Librerías incluidas (licencia MIT):
+- html2canvas 1.4.1 — https://github.com/niklasvh/html2canvas
+- JSZip 3.10.1 — https://github.com/Stuk/jszip
