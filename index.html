@@ -173,7 +173,8 @@ details details{background:#fafbfd}
 .libbox{background:var(--ui-panel);border-radius:12px;width:min(1020px,100%);max-height:100%;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
 .libhd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--ui-line);flex-wrap:wrap}
 .libhd b{font-size:15px;margin-right:auto}
-.libhd input{border:1px solid var(--ui-line);border-radius:6px;padding:6px 9px;min-width:220px}
+.libhd input[type=text]{border:1px solid var(--ui-line);border-radius:6px;padding:6px 9px;min-width:220px}
+.libtrim{font-size:12px;color:var(--ui-mute);display:flex;align-items:center;gap:5px}
 #libGrid{padding:14px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;flex:1;min-height:240px;align-content:start}
 #libGrid.dragging{outline:3px dashed var(--ui-accent);outline-offset:-8px}
 .lc{border:1px solid var(--ui-line);border-radius:9px;padding:8px;display:grid;gap:6px;background:#fff}
@@ -209,6 +210,8 @@ details details{background:#fafbfd}
     <span class="st" id="status"></span>
     <button class="btn" id="bLib">🖼 Imágenes</button>
     <button class="btn" id="bOv">Vista general</button>
+    <button class="btn" id="bUndo" title="Deshacer (Ctrl+Z)">↶</button>
+    <button class="btn" id="bRedo" title="Rehacer (Ctrl+Y)">↷</button>
     <button class="btn" id="bNew">Nuevo</button>
     <button class="btn" id="bOpen">Abrir…</button>
     <button class="btn" id="bSave">Guardar archivo</button>
@@ -222,6 +225,7 @@ details details{background:#fafbfd}
 <div id="lib" hidden><div class="libbox">
   <div class="libhd"><b id="libTitle">Biblioteca de imágenes</b>
     <input id="libQ" type="text" placeholder="Buscar por nombre o etiqueta">
+    <label class="libtrim"><input type="checkbox" id="libTrim" checked> Recortar bordes blancos al importar</label>
     <button class="btn pri" data-act="libUpload">＋ Importar imágenes</button>
     <button class="btn" data-act="libClose">Cerrar</button></div>
   <div id="libGrid"></div>
@@ -365,9 +369,22 @@ function save() {
   clearTimeout(saveTimer);
   $('status').textContent = 'Guardando…';
   saveTimer = setTimeout(async () => {
+    snap();
     const ok = await idb.put('project', JSON.stringify({ pages: project.pages }));
     $('status').textContent = ok ? 'Guardado en este navegador ✓' : 'No se pudo autoguardar (usa “Guardar archivo”)';
   }, 400);
+}
+let hist = [], hi = -1;
+function snap() {
+  const j = JSON.stringify(project.pages);
+  if (hist[hi] === j) return;
+  hist = hist.slice(0, hi + 1); hist.push(j); if (hist.length > 60) hist.shift(); hi = hist.length - 1; syncUndo();
+}
+function syncUndo() { if ($('bUndo')) { $('bUndo').disabled = hi <= 0; $('bRedo').disabled = hi >= hist.length - 1; } }
+function undo(d) {
+  const n = hi + d; if (n < 0 || n >= hist.length) return;
+  hi = n; project.pages = JSON.parse(hist[hi]); cur = Math.min(cur, project.pages.length - 1);
+  renderAll(); save(); syncUndo();
 }
 let libTimer;
 function saveLib() { clearTimeout(libTimer); libTimer = setTimeout(() => idb.put('library', JSON.stringify(lib())), 400); }
@@ -454,11 +471,10 @@ function measureEl(style) {
   _meas.className = 'page s-' + style;
   return _meas;
 }
-function imgSize(it, p, iw, maxW) {
-  const ar = imgAr(it.img, it.ar), k = (it.imgS > 0 ? it.imgS : 100) / 100, maxH = (p.imgH || 150) * k;
-  let w = Math.min(iw * k, maxW || 1e9), h = w / ar;
-  if (h > maxH) { h = maxH; w = h * ar; }
-  return { w: Math.round(w), h: Math.round(h) };
+function imgSize(it, p, iw) {                         // el ancho nunca pasa de la columna de la foto: crece hacia arriba/abajo
+  const ar = imgAr(it.img, it.ar), k = (it.imgS > 0 ? it.imgS : 100) / 100;
+  const h = Math.min((p.imgH || 150) * k, iw / ar);
+  return { w: Math.round(h * ar), h: Math.round(h) };
 }
 function measFont(list, rows, wide) {
   const longest = list.reduce((m, x) => Math.max(m, x.l.length), 0);
@@ -481,11 +497,10 @@ function itemHTML(it, p, o) {
   const iw = (p.imgW || 128) - (cards ? 16 : 0);
   const up = o.edit ? `data-upload="items.${o.i}.img"` : '';
   const rh = o.edit ? `<div class="rh2" data-imgresize="${o.i}" title="Arrastra para agrandar o achicar la foto"></div>` : '';
-  const maxW = o.w - (cards ? 30 : 0) - 14 - (o.wide ? 300 : 150);         // deja espacio para las medidas
   const k = (it.imgS > 0 ? it.imgS : 100) / 100;
   let im;
-  if (imgSrc(it.img)) { const z = imgSize(it, p, iw, maxW); im = `<div class="im" ${up} style="width:${Math.max(iw, z.w)}px;height:${z.h}px"><img src="${imgSrc(it.img)}" style="width:${z.w}px;height:${z.h}px" draggable="false">${rh}</div>`; }
-  else if (o.edit) { const w = Math.max(iw, Math.min(iw * k, maxW)); im = `<div class="im ph" ${up} style="width:${Math.round(w)}px;height:${Math.round(Math.min(100, p.imgH || 150) * k)}px">＋ foto${rh}</div>`; }
+  if (imgSrc(it.img)) { const z = imgSize(it, p, iw); im = `<div class="im" ${up} style="width:${iw}px;height:${z.h}px"><img src="${imgSrc(it.img)}" style="width:${z.w}px;height:${z.h}px" draggable="false">${rh}</div>`; }
+  else if (o.edit) im = `<div class="im ph" ${up} style="width:${iw}px;height:${Math.round(Math.min(100, p.imgH || 150) * k)}px">＋ foto${rh}</div>`;
   else im = `<div class="im" style="width:${iw}px"></div>`;
 
   const list = parseMeasures(it.items, it.unit, it.gap);
@@ -653,6 +668,29 @@ function imgField(label, path) {
   return `<div class="f"><span>${label}</span><div class="imgf"><div class="th" style="${src ? `background-image:url(${src})` : ''}"></div>
     <button class="btn sm" data-act="pick" data-p="${path}">${src ? 'Cambiar' : 'Elegir de la biblioteca'}</button>${src ? `<button class="btn sm" data-act="clearImg" data-p="${path}">Quitar</button>` : ''}</div></div>`;
 }
+const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+function autoAssign() {
+  const p = page(), used = new Set(p.items.map(i => i.img).filter(Boolean)); let n = 0;
+  p.items.forEach(it => {
+    if (it.kind === 'section' || it.img) return;
+    const toks = norm(it.name + ' ' + (it.sub || '')).split(' ').filter(t => t.length > 2); if (!toks.length) return;
+    let best = null, bs = 0;
+    lib().forEach(e => {
+      const hay = ' ' + norm(e.name + ' ' + e.tags) + ' '; let sc = 0;
+      toks.forEach(t => { if (hay.includes(' ' + t)) sc++; });
+      const val = sc + (sc === toks.length ? 1 : 0) - (used.has('lib:' + e.id) ? .5 : 0);
+      if (sc > 0 && val > bs) { bs = val; best = e; }
+    });
+    if (best) { it.img = 'lib:' + best.id; it.ar = best.ar; used.add(it.img); n++; }
+  });
+  $('status').textContent = n ? `Fotos asignadas: ${n}` : 'Sin coincidencias: revisa nombres y etiquetas en la biblioteca';
+}
+function bulkItems(txt) {
+  return txt.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const parts = l.includes('|') ? l.split('|') : l.split('\t');
+    return { ...newItem(), name: (parts[0] || '').trim(), items: (parts[1] || '').trim(), sub: (parts[2] || '').trim() };
+  });
+}
 const MEAS_HINT = '<p class="hint">Una medida por línea o separadas por coma. Escribe <b>1/2</b> o <b>2 1/2</b> y se convierte a ½” y 2½”. Con valor: <b>1 | 50mts y 100mts</b></p>';
 
 function measOpts(base) {
@@ -753,13 +791,17 @@ function renderEditor() {
       ${F('Nombre', `items.${i}.name`)}${F('Detalle (ej. Vástago fijo)', `items.${i}.sub`)}
       ${imgField('Foto', `items.${i}.img`)}
       ${F('Tamaño de la foto (%)', `items.${i}.imgS`, { type: 'range', min: 40, max: 300 })}
-      <p class="hint">También puedes arrastrar el cuadrito azul de la esquina de la foto, en la página. Para una foto todavía más grande, usa “Ancho completo” abajo.</p>
+      <p class="hint">La foto crece hacia arriba y abajo; su columna mide lo mismo en todos los artículos, así las medidas siempre quedan centradas y alineadas. También puedes arrastrar el cuadrito azul de la foto (solo en vertical). Si ya no crece, llegó al ancho de la columna: súbelo en “Foto: ancho máx.” de la página.</p>
       ${F('Tamaño en la hoja', `items.${i}.span`, { opts: [[1, 'Normal (media hoja)'], [2, 'Ancho completo (listas muy largas)']], num: true })}
       ${F('Medidas', `items.${i}.items`, { rows: 5 })}${MEAS_HINT}
       <div class="row2">${F('Unidad al final', `items.${i}.unit`, { ph: '”' })}${F('Espacio “2 ½”', `items.${i}.gap`, { chk: true })}</div>
       ${F('Viñetas •', `items.${i}.bullets`, { chk: true })}
       ${moveBtns('items', i, p.items.length, 'artículo')}`, p.items.length === 1)).join('') +
-      `<div class="acts"><button class="btn" data-act="add" data-p="items">＋ Artículo</button><button class="btn" data-act="addSection">＋ Sección (título intermedio)</button></div>`, true);
+      `<div class="acts"><button class="btn" data-act="add" data-p="items">＋ Artículo</button><button class="btn" data-act="addSection">＋ Sección (título intermedio)</button><button class="btn" data-act="autoImg" title="Pone la foto de la biblioteca cuyo nombre o etiquetas coincidan con el artículo">🪄 Asignar fotos por nombre</button></div>`, true);
+    h += det('bulk', 'Agregar varios artículos de golpe', `
+      <p class="hint">Pega una lista, un artículo por línea: <b>Nombre | medidas separadas por coma | detalle opcional</b>. También sirve pegar filas de Excel o Google Sheets (columnas separadas por tab).</p>
+      <textarea id="bulkTxt" rows="6" style="width:100%;border:1px solid var(--ui-line);border-radius:6px;padding:6px 8px" placeholder="Codo 90° | 1/2, 3/4, 1, 1 1/4, 1 1/2, 2\nTee | 1/2, 3/4, 1, 1 1/4, 1 1/2, 2, 2 1/2, 3, 4"></textarea>
+      <button class="btn pri" data-act="bulkAdd">Agregar a la página</button>`);
   }
   ed.innerHTML = h;
   ed.scrollTop = top;
@@ -802,6 +844,8 @@ document.addEventListener('click', async e => {
       arr.push(path === 'groups' ? newGroup() : path === 'texts' ? newText() : path === 'qrs' ? newQr() : newItem());
       openState[(path === 'groups' ? 'g' : path === 'texts' ? 't' : path === 'qrs' ? 'q' : 'i') + (arr.length - 1)] = true; break;
     }
+    case 'autoImg': autoAssign(); break;
+    case 'bulkAdd': { const t = $('bulkTxt').value; if (!t.trim()) return; p.items.push(...bulkItems(t)); $('bulkTxt').value = ''; break; }
     case 'addSection': p.items.push(newSection()); openState['i' + (p.items.length - 1)] = true; break;
     case 'del': get(p, path).splice(i, 1); break;
     case 'dupI': { const arr = get(p, path); arr.splice(i + 1, 0, clone(arr[i])); break; }
@@ -825,6 +869,20 @@ document.addEventListener('click', async e => {
 /* ---- Biblioteca de imágenes ---- */
 let libMode = null;                     // null = administrar · {path} = elegir para ese campo
 const libUse = id => JSON.stringify(project.pages).split('lib:' + id).length - 1;
+function trimWhite(c) {
+  const w = c.width, h = c.height, d = c.getContext('2d').getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4;
+    if (d[i + 3] > 12 && (d[i] < 232 || d[i + 1] < 232 || d[i + 2] < 232)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  }
+  if (x1 < 0) return c;
+  const pad = 4; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(w - 1, x1 + pad); y1 = Math.min(h - 1, y1 + pad);
+  const nw = x1 - x0 + 1, nh = y1 - y0 + 1;
+  if (nw > w * .97 && nh > h * .97) return c;
+  const o = document.createElement('canvas'); o.width = nw; o.height = nh;
+  o.getContext('2d').drawImage(c, x0, y0, nw, nh, 0, 0, nw, nh); return o;
+}
 function loadImage(file, max = 1400) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file), im = new Image();
@@ -833,9 +891,10 @@ function loadImage(file, max = 1400) {
       const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
       c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      let out = c.toDataURL('image/webp', .88);
-      if (!out.startsWith('data:image/webp')) out = c.toDataURL('image/png');
-      res({ src: out, w: im.width, h: im.height });
+      const f = $('libTrim') && $('libTrim').checked ? trimWhite(c) : c;
+      let out = f.toDataURL('image/webp', .88);
+      if (!out.startsWith('data:image/webp')) out = f.toDataURL('image/png');
+      res({ src: out, w: f.width, h: f.height });
     };
     im.onerror = rej; im.src = url;
   });
@@ -896,7 +955,7 @@ $('stage').addEventListener('pointerdown', e => {
   const sx = e.clientX, sy = e.clientY, w0 = r.width / scale, h0 = r.height / scale, s0 = it.imgS > 0 ? it.imgS : 100;
   let raf = 0;
   const mv = ev => {
-    const k = ((w0 + (ev.clientX - sx) / scale) / w0 + (h0 + (ev.clientY - sy) / scale) / h0) / 2;
+    const k = (h0 + (ev.clientY - sy) / scale) / h0;
     it.imgS = Math.max(40, Math.min(300, Math.round(s0 * k)));
     if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderPreview(); });
   };
@@ -951,6 +1010,14 @@ $('fileJson').addEventListener('change', async e => {
   catch { alert('Ese archivo no es un catálogo válido.'); }
 });
 window.addEventListener('resize', renderPreview);
+$('bUndo').onclick = () => undo(-1);
+$('bRedo').onclick = () => undo(1);
+document.addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.target.matches('input,textarea,select')) return;
+  const k = e.key.toLowerCase();
+  if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(-1); }
+  else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); undo(1); }
+});
 
 /* ---- Inicio ---- */
 (async () => {
@@ -960,6 +1027,7 @@ window.addEventListener('resize', renderPreview);
   const sl = await idb.get('library');
   if (sl) { try { project.library = JSON.parse(sl); } catch {} }
   lib();
+  hist = [JSON.stringify(project.pages)]; hi = 0; syncUndo();
   renderAll();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderPreview);
 })();
